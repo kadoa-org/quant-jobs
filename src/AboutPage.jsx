@@ -1,39 +1,55 @@
 import React from "react";
+import { AboutPage as KitAboutPage } from "./kit";
 
-function ExtLink({ href, children }) {
-  return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#1d70b8] underline underline-offset-2">
-      {children}
-    </a>
-  );
-}
+const REPO = "https://github.com/kadoa-org/quant-jobs";
+
+const METHODS = [
+  {
+    title: "Limits",
+    body: [
+      "The board updates once a day, so a new job can take a day to show up.",
+      "It covers only the firms listed, and some roles are never posted publicly.",
+      "Tags come from a language model and can be wrong. Check the original posting before relying on one.",
+    ],
+  },
+  {
+    title: "Roles, seniority and skills",
+    body: "A language model reads each posting and tags its role, seniority, education, languages, tools and asset classes. Remote, hybrid and on-site come from fixed text rules instead.",
+  },
+  {
+    title: "Salaries",
+    body: "Salary is the base pay a posting discloses. Ranges use the midpoint. Hourly pay is multiplied by 2,080 and monthly pay by 12. Values under 25,000 or over 1,000,000 are dropped, and currencies are not converted. Medians count only postings that disclose pay.",
+  },
+  {
+    title: "New in 30 days",
+    body: "A firm's jobs posted within 30 days of the newest posting on the board. Firms that publish no posting dates show no figure.",
+  },
+];
 
 export default function AboutPage() {
   return (
-    <div className="dk-container pt-8 pb-20">
-      <div className="max-w-3xl">
-        <h1 className="dk-h1">About the data</h1>
-        <p className="text-[15px] leading-[1.5] text-[#505a5f]">
-          A holistic live view of the quant job market: postings from all top quant firms, updated daily with{" "}
-          <ExtLink href="https://kadoa.com">kadoa.com</ExtLink>. Every posting is pulled from the firm's own careers
-          page and classified by role, seniority, location, work mode, asset class, and tech stack. The code and the
-          full dataset are open source on <ExtLink href="https://github.com/kadoa-org/quant-jobs">GitHub</ExtLink>
-          .
-        </p>
-      </div>
-
-      <div className="mt-8 max-w-5xl">
-        <div className="border border-[#b1b4b6] bg-white p-5">
-          <p className="text-[14px] leading-[1.5] text-[#26282a]">
-            <ExtLink href="https://kadoa.com">Kadoa</ExtLink> is the web data layer for finance, providing the most
-            reliable datasets for investors.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-16 max-w-3xl text-[13px] text-[#505a5f]">
-        <p>For informational and research purposes. Postings belong to the firms that published them.</p>
-      </div>
+    <div className="dk-container">
+      <KitAboutPage
+        lede="Open quant jobs at hedge funds, prop trading firms, market makers and asset managers, collected from each firm's own careers page. Free to search, download and reuse."
+        sources={[
+          { name: "Firm careers pages", href: `${import.meta.env.BASE_URL}?view=firms`, what: "Open roles posted by each firm on the board" },
+          { name: "Greenhouse", href: "https://www.greenhouse.com/", what: "Job boards used by many of these firms" },
+          { name: "Workday", href: "https://www.workday.com/", what: "Job boards used by many of these firms" },
+          { name: "GitHub", href: "https://github.com/", what: "Firms' public code, for the Open source page" },
+        ]}
+        steps={[
+          { title: "Monitor", text: "Kadoa checks each firm's careers page for new jobs every day." },
+          { title: "Extract", text: "It pulls the title, location, salary and full text of every posting." },
+          { title: "Classify", text: "Each job is tagged with its role, seniority and tech stack." },
+          { title: "Publish", text: "The board and dataset update, and jobs a firm takes down are removed." },
+        ]}
+        methods={METHODS}
+        corrections={
+          <>
+            Found an error or a missing firm? <a href={`${REPO}/issues`}>Open an issue on GitHub</a>.
+          </>
+        }
+      />
     </div>
   );
 }
