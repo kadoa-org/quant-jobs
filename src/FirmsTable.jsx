@@ -68,7 +68,7 @@ export default function FirmsTable({ jobs, filters }) {
     setSort((s) => (s.key === key ? { key, dir: s.dir === "desc" ? "asc" : "desc" } : { key, dir: numeric ? "desc" : "asc" }));
 
   return (
-    <div className="firms-table">
+    <div className="firms-table dk-container">
       <div className="home-intro">
         <h1 className="dk-h1">Quant firms</h1>
         <p className="home-lede">

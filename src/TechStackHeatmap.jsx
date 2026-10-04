@@ -201,13 +201,13 @@ export default function TechStackHeatmap({ jobs }) {
 
   return (
     <div className="bg-[#fbfbfa]">
-      <div className="px-6 py-6 sm:px-10 sm:py-8 max-w-[1380px] mx-auto">
+      <div className="dk-container py-6 sm:py-8">
         <h1 className="dk-h1">
           Quant tech heatmap
         </h1>
-        <div className="overflow-x-auto -mx-6 sm:mx-0">
+        <div className="overflow-x-auto -mx-[15px] sm:mx-0">
           <div
-            className="px-6 sm:px-0 min-w-[1300px]"
+            className="px-[15px] sm:px-0 min-w-[1300px]"
             // biome-ignore lint/security/noDangerouslySetInnerHtml: SVG generated locally from trusted aggregation
             dangerouslySetInnerHTML={{ __html: svg }}
           />

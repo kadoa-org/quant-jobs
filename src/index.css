@@ -7,24 +7,6 @@
   scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
 }
 
-/* Align the kit header, nav + footer containers with the full-bleed content
-   and the filter-bar gutter (px-3 sm:px-5) so all edges line up. */
-.dk-header .dk-container,
-.dk-nav .dk-container,
-.dk-footer .dk-container {
-  max-width: none;
-  padding-left: 12px;
-  padding-right: 12px;
-}
-@media (min-width: 640px) {
-  .dk-header .dk-container,
-  .dk-nav .dk-container,
-  .dk-footer .dk-container {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-}
-
 /* ── Stack cards (firm tech-stack browser), GOV.UK design system ─────── */
 /* Summary-card pattern: square corners, #b1b4b6 borders, grey header band. */
 .stk-head { max-width: 640px; margin-bottom: 18px; }
@@ -85,7 +67,7 @@
 .stk-mx-divx { border-left: 2px solid #b8b6b2; }
 @media (max-width: 720px) {
   /* Full-bleed scroll area; the sticky firm column stays pinned. */
-  .stk-mx-scroll { margin: 0 -16px; padding: 0 0 8px 16px; }
+  .stk-mx-scroll { margin: 0 -15px; padding: 0 0 8px 15px; }
   .stk-mx-firm { font-size: 12px; padding: 0 8px; }
   .stk-mx-firm .stk-firmlink { display: inline-block; max-width: 118px; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
   .stk-mx-cell { width: 38px; min-width: 38px; height: 32px; }
@@ -155,19 +137,19 @@
 /* Chart cards sit in a grid here, so the grid gap spaces them rather than each card's own margin. */
 .dk-card-grid > .dk-card { margin: 0; }
 
-/* Home: title and one line of scope above the jobs table, aligned with the table's left edge. */
-.home-intro { padding: 20px 20px 4px; max-width: 1100px; }
-@media (max-width: 640px) { .home-intro { padding: 16px 12px 0; } }
+/* Home: title and one line of scope above the jobs table; the sides come from .dk-container. */
+.home-intro { padding: 20px 0 4px; max-width: 1100px; }
+@media (max-width: 640px) { .home-intro { padding: 16px 0 0; } }
 .home-lede { font-size: 17px; line-height: 1.45; color: var(--dk-muted); margin: 0 0 12px; max-width: 80ch; }
 /* Firms table (FirmsTable.jsx): header buttons that sort, styled as plain header text. */
-.firms-table__wrap { margin: 0 20px 36px; }
-@media (max-width: 640px) { .firms-table__wrap { margin: 0 12px 24px; } }
+.firms-table__wrap { margin: 0 0 36px; }
+@media (max-width: 640px) { .firms-table__wrap { margin: 0 0 24px; } }
 .firms-table__sort { appearance: none; background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: inherit; cursor: pointer; white-space: nowrap; }
 .firms-table__sort:focus-visible { outline: 3px solid var(--dk-focus); }
 
 /* Filter bar (FilterBar.jsx): below the page title, a "Filter by" label and buttons that look like controls. */
-.filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 20px 14px; position: relative; z-index: 100; }
-@media (max-width: 640px) { .filter-bar { padding: 0 12px 12px; } }
+.filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 0 14px; position: relative; z-index: 100; }
+@media (max-width: 640px) { .filter-bar { padding: 0 0 12px; } }
 .filter-bar__label { font-size: 16px; font-weight: 700; margin-right: 4px; }
 .filter-chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; background: #fff; border: 1px solid var(--dk-gov-border, #b1b4b6); color: #0b0c0c; font-size: 16px; white-space: nowrap; cursor: pointer; }
 .filter-chip:hover { border-color: #0b0c0c; }

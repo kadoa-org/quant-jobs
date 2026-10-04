@@ -92,7 +92,7 @@ export default function DataTable({ jobs, search: externalSearch, onSearchChange
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 border-b border-gray-100 sticky top-11 sm:static z-20 bg-white">
+      <div className="flex items-center gap-2 sm:gap-3 py-2.5 border-b border-gray-100 sticky top-11 sm:static z-20 bg-white">
         <input
           type="text"
           placeholder="Search jobs, firms, skills..."
@@ -215,7 +215,7 @@ export default function DataTable({ jobs, search: externalSearch, onSearchChange
       </div>
 
       {sorted.length > 0 && (
-        <div className="flex items-center justify-between px-5 py-2 border-t border-gray-100 text-[12px] text-gray-500">
+        <div className="flex items-center justify-between py-2 border-t border-gray-100 text-[12px] text-gray-500">
           <span>
             Page {page} of {totalPages}
           </span>

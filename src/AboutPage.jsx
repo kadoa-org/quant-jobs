@@ -10,7 +10,7 @@ function ExtLink({ href, children }) {
 
 export default function AboutPage() {
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 pt-8 pb-20">
+    <div className="dk-container pt-8 pb-20">
       <div className="max-w-3xl">
         <h1 className="dk-h1">About the data</h1>
         <p className="text-[15px] leading-[1.5] text-[#505a5f]">

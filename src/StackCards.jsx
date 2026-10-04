@@ -407,7 +407,8 @@ export default function StackCards({ jobs = [], onApply, initialData, initialPat
 
   return (
     <div className="stk">
-      <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-[5px] border-b border-black/[0.04] bg-[#fcfcfc] relative z-[100]">
+      <div className="border-b border-black/[0.04] bg-[#fcfcfc] relative z-[100]">
+      <div className="dk-container flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 py-[5px]">
         <div className="relative">
           <button type="button" onClick={() => toggle("firm")} className={chipClass(firmSel.length > 0)}>
             <span className="px-[6px]">{firmSel[0] || "Firm"}</span>
@@ -445,8 +446,9 @@ export default function StackCards({ jobs = [], onApply, initialData, initialPat
           </button>
         )}
       </div>
+      </div>
 
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 pt-6 pb-16">
+      <div className="dk-container pt-6 pb-16">
         <div className="stk-head">
           <h1 className="dk-h1">Tech stack</h1>
           {!lensTech && !detailFirm && (

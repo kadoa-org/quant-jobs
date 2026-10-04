@@ -176,7 +176,8 @@ export default function Dashboard({ jobs, firms, filters }) {
   };
 
   return (
-    <div className="p-3 sm:p-5 bg-[#fbfbfa]">
+    <div className="py-3 sm:py-5 bg-[#fbfbfa]">
+      <div className="dk-container">
       {/* Headline figures: a snapshot of the postings open now, so the heading names it and the date runs to the
           newest posting. */}
       <h1 className="dk-h1">Hiring insights</h1>
@@ -295,6 +296,7 @@ export default function Dashboard({ jobs, firms, filters }) {
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
+      </div>
       </div>
     </div>
   );

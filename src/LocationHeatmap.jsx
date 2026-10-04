@@ -31,8 +31,8 @@ export default function LocationHeatmap({ jobs }) {
   const numCities = cities.length;
 
   return (
-    <div className="p-3 sm:p-5 bg-[#fbfbfa]">
-      <div className="max-w-[1380px] mx-auto">
+    <div className="py-3 sm:py-5 bg-[#fbfbfa]">
+      <div className="dk-container">
         <h1 className="dk-h1">
           Where quants hire
         </h1>

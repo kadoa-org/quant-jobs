@@ -186,7 +186,7 @@ function InsightsNav({ view, setView, onFirms }) {
       </nav>
       {open && (
         <div className="bg-white border-b border-[#b1b4b6]">
-          <div className="px-3 sm:px-5 py-6">
+          <div className="dk-container py-6">
             <div className="flex flex-wrap gap-x-10 gap-y-5">
               {ITEMS.map((it) =>
                 it.href ? (
@@ -384,7 +384,7 @@ export default function App({ initialPage = null }) {
         <main className="flex-1 relative">
           {view === "firms" && <FirmsTable jobs={filteredJobs} filters={filterBar(FIRM_FILTER_KEYS)} />}
           {view === "table" && (
-            <>
+            <div className="dk-container">
             {/* A job board opens on the list: title, one line of scope, then search and the table, as openquant,
                 eFinancialCareers and Wellfound do. Market figures live on the Insights pages. */}
             <div className="home-intro">
@@ -400,7 +400,7 @@ export default function App({ initialPage = null }) {
               onSearchChange={setSearch}
               onClearAll={() => setFilters({ ...EMPTY_FILTERS })}
             />
-            </>
+            </div>
           )}
           {view === "dashboard" && <Dashboard jobs={filteredJobs} firms={filteredFirms} stats={stats} filters={filterBar(JOB_FILTER_KEYS)} />}
           {view === "techstack" && <TechStackHeatmap jobs={jobs} />}

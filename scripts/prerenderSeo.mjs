@@ -248,8 +248,7 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script
   body{margin:0;background:var(--dk-bg);color:var(--dk-ink);font-family:var(--dk-font)}
   /* vertical only — must not reset the .dk-container 0 15px side padding */
   .seo-main{padding-top:28px;padding-bottom:64px}
-  .insights-panel-inner{padding:24px 12px}
-  @media (min-width:40.0625em){.insights-panel-inner{padding:24px 20px}}
+  .insights-panel-inner{padding-top:24px;padding-bottom:24px}
   .seo-crumbs{font-size:var(--dk-fs-s);color:var(--dk-muted);margin:0 0 20px}
   .seo-crumbs a{color:var(--dk-link)}
   /* 32px, 27px on a phone: the page-title size shared by every dataset site. */
@@ -1144,7 +1143,7 @@ const insightsNav = (current) => `<nav class="dk-nav" aria-label="Primary">
   </div>
 </nav>
 <div id="insights-panel" hidden style="background:#fff;border-bottom:1px solid #b1b4b6">
-  <div class="insights-panel-inner">
+  <div class="dk-container insights-panel-inner">
     <div style="display:flex;flex-wrap:wrap;gap:20px 40px">
       ${insightsNavItem(`${PREFIX}/?view=dashboard`, "Hiring insights", "Roles, seniority, salaries and demand across all firms", false)}
       ${insightsNavItem(`${PREFIX}/tech-stack`, "Tech heatmap", "Languages and tools by firm, the hiring heatmap", false)}
@@ -1407,7 +1406,7 @@ let internshipsSeoSection = null;
     // /internships is a live SPA view (InternshipsView). These tables ship
     // after #root in the built shell, so crawlers and no-JS visitors get the
     // full rankings while the interactive view owns the same URL.
-    internshipsSeoSection = `    <section class="dk-container seo-shell" style="padding:8px 15px 8px">
+    internshipsSeoSection = `    <section class="dk-container seo-shell" style="padding-top:8px;padding-bottom:8px">
       <h2 style="font:700 var(--dk-fs-l)/1.3 var(--dk-font);margin:32px 0 10px">Every firm hiring interns</h2>
       ${hint(`${interns.length} live internship ads across ${internFirms.size} firms. "Names 2027" counts ads with 2027 in the title; share is internships as a percentage of all the firm's live ads.`)}
       ${sortableTable(firmHead, firmRows)}
@@ -1471,7 +1470,7 @@ const HEAD_CONTENT = {
 };
 const headSectionFor = (shell) => {
   const c = HEAD_CONTENT[shell] ?? HEAD_CONTENT["index.html"];
-  return `    <section class="dk-container seo-shell" style="padding:28px 15px 8px">
+  return `    <section class="dk-container seo-shell" style="padding-top:28px;padding-bottom:8px">
       <h1 style="font:700 var(--dk-fs-xxl,1.6rem)/1.15 var(--dk-font,Inter,system-ui,sans-serif);letter-spacing:-0.02em;margin:0 0 10px">${c.h1}</h1>
       <p style="font:400 var(--dk-fs-l,1.05rem)/1.5 var(--dk-font,Inter,system-ui,sans-serif);color:var(--dk-muted,#666);max-width:70ch;margin:0 0 20px">${c.intro}</p>
       ${kitTable(`<th class="dk-num">#</th><th>Firm</th><th>Type</th><th class="dk-num">Open roles</th>`, headRows)}

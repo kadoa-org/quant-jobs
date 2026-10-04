@@ -70,7 +70,8 @@
 /* ── StatPanel ── */
 
 /* ── SiteHeader + NavBar ── */
-.dk-container { max-width: 960px; margin: 0 auto; padding: 0 15px; }
+/* One page width for header, navigation, content and footer, so their edges line up: 1200px of content plus gutters. */
+.dk-container { max-width: calc(1200px + 60px); margin: 0 auto; padding: 0 15px; box-sizing: border-box; }
 @media (min-width: 40.0625em) { .dk-container { padding: 0 30px; } }
 .dk-header { background: var(--dk-link); color: #fff; }
 /* Cross-dataset footer — gov.uk style: light surface, hairline rule, blue links */
