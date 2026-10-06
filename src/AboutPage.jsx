@@ -30,6 +30,7 @@ export default function AboutPage() {
   return (
     <div className="dk-container">
       <KitAboutPage
+        dataset="quant"
         lede="Open quant jobs at hedge funds, prop trading firms, market makers and asset managers, collected from each firm's own careers page."
         sources={[
           { name: "Firm careers pages", href: `${import.meta.env.BASE_URL}?view=firms`, what: "Open roles posted by each firm on the board" },
