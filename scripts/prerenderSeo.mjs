@@ -888,10 +888,10 @@ for (const j of jobs) {
   const locStr = (j.locations || []).join(", ");
   const jobLocations = dedupePlaces((j.locations || []).flatMap(splitLocations).map(placeFor));
   const applicantLocationRequirements = applicantCountriesFor(jobLocations);
-  if (j.datePosted && j.workMode === "remote" && !applicantLocationRequirements.length) {
-    throw new Error(
-      `Remote JobPosting ${j.slug} has no normalized applicant country for locations: ${locStr || "(none)"}`,
-    );
+  // A remote posting with no locations at all ships without markup (see canMarkUp); listed
+  // locations that fail to normalize to a country are a normalization bug, so fail the build.
+  if (j.datePosted && j.workMode === "remote" && locStr && !applicantLocationRequirements.length) {
+    throw new Error(`Remote JobPosting ${j.slug} has no normalized applicant country for locations: ${locStr}`);
   }
   const chips = [
     j.firmName,
