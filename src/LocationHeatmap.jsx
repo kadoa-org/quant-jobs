@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { ChartCard } from "./lib/ChartCard";
+import { SOURCE } from "./cardSource";
+import { ChartCard } from "./kit";
 import {
   aggregateLocations,
   buildHybridLeaderboardSvg,
@@ -42,7 +43,7 @@ export default function LocationHeatmap({ jobs }) {
         </p>
 
         <div className="dk-card-grid grid grid-cols-1 gap-6">
-          <ChartCard title="Top quant cities">
+          <ChartCard title="Top quant cities" footer={SOURCE}>
             {/* Mobile: compact chart that scales down to viewport */}
             <div
               className="sm:hidden"
@@ -60,7 +61,7 @@ export default function LocationHeatmap({ jobs }) {
           </ChartCard>
 
           {hybridLeaders.length > 0 && (
-            <ChartCard title="Hybrid or remote">
+            <ChartCard title="Hybrid or remote" footer={SOURCE}>
               <div
                 className="sm:hidden"
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: SVG generated locally from trusted aggregation

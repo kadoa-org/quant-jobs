@@ -136,6 +136,7 @@
 
 /* Chart cards sit in a grid here, so the grid gap spaces them rather than each card's own margin. */
 .dk-card-grid > .dk-card { margin: 0; }
+.dk-card__footer a { color: var(--dk-link); text-decoration: underline; text-underline-offset: 2px; }
 
 /* Home: title and one line of scope above the jobs table; the sides come from .dk-container. */
 .home-intro { padding: 20px 0 4px; max-width: 1100px; }

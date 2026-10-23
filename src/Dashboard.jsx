@@ -47,10 +47,8 @@ const tooltipStyle = {
   boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
 };
 
-// ChartCard lives in lib/ChartCard.jsx, shared with /locations.
-// so both views have identical card chrome. Edit there to update both.
-import { KeyFigures } from "./kit";
-import { ChartCard } from "./lib/ChartCard";
+import { ChartCard, KeyFigures } from "./kit";
+import { SOURCE } from "./cardSource";
 
 export default function Dashboard({ jobs, firms, filters }) {
   // --- Tech stack by firm type ---
@@ -195,13 +193,13 @@ export default function Dashboard({ jobs, firms, filters }) {
 
       <div className="dk-card-grid grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Tech stack by firm type - THE key chart for r/quant */}
-        <ChartCard title="Tech stack by firm type" subtitle="Share of jobs mentioning each language, by firm type.">
+        <ChartCard title="Tech stack by firm type" description="Share of jobs mentioning each language, by firm type." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={techByFirmType} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 45 }}>
               <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
               <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 12 }} width={40} />
               <Tooltip contentStyle={tooltipStyle} formatter={(v) => `${v}%`} />
-              <Legend formatter={(v) => firmTypeLabels[v] || v} wrapperStyle={{ fontSize: 10 }} />
+              <Legend verticalAlign="top" formatter={(v) => <span style={{ color: "#0b0c0c" }}>{firmTypeLabels[v] || v}</span>} wrapperStyle={{ fontSize: 12, paddingBottom: 8 }} />
               {["proprietary", "hedge_fund", "asset_manager"].map((type, i) => (
                 <Bar key={type} dataKey={type} fill={firmTypeColors[i]} radius={[0, 2, 2, 0]} barSize={6} />
               ))}
@@ -210,7 +208,7 @@ export default function Dashboard({ jobs, firms, filters }) {
         </ChartCard>
 
         {/* Programming Languages */}
-        <ChartCard title="Programming languages" subtitle="Jobs mentioning each language.">
+        <ChartCard title="Programming languages" description="Jobs mentioning each language." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={languageData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 75 }}>
               <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
@@ -222,7 +220,7 @@ export default function Dashboard({ jobs, firms, filters }) {
         </ChartCard>
 
         {/* Technologies & Tools */}
-        <ChartCard title="Technologies and tools" subtitle="Frameworks, platforms and tools named in postings.">
+        <ChartCard title="Technologies and tools" description="Frameworks, platforms and tools named in postings." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={techData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 80 }}>
               <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
@@ -234,7 +232,7 @@ export default function Dashboard({ jobs, firms, filters }) {
         </ChartCard>
 
         {/* Role Categories */}
-        <ChartCard title="Role categories" subtitle="Jobs by role.">
+        <ChartCard title="Role categories" description="Jobs by role." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={roleData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 80 }}>
               <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
@@ -250,7 +248,7 @@ export default function Dashboard({ jobs, firms, filters }) {
         </ChartCard>
 
         {/* Top Locations */}
-        <ChartCard title="Top locations" subtitle="Cities with the most postings.">
+        <ChartCard title="Top locations" description="Cities with the most postings." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={locationData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 70 }}>
               <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
@@ -262,7 +260,7 @@ export default function Dashboard({ jobs, firms, filters }) {
         </ChartCard>
 
         {/* Education Requirements */}
-        <ChartCard title="Education requirements" subtitle="Minimum education named in postings.">
+        <ChartCard title="Education requirements" description="Minimum education named in postings." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={educationData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 90 }}>
               <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
@@ -274,7 +272,7 @@ export default function Dashboard({ jobs, firms, filters }) {
         </ChartCard>
 
         {/* Seniority Distribution */}
-        <ChartCard title="Seniority" subtitle="Jobs by seniority level.">
+        <ChartCard title="Seniority" description="Jobs by seniority level." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={seniorityData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 70 }}>
               <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
@@ -286,7 +284,7 @@ export default function Dashboard({ jobs, firms, filters }) {
         </ChartCard>
 
         {/* Asset Classes */}
-        <ChartCard title="Asset classes" subtitle="Asset classes named most often in postings.">
+        <ChartCard title="Asset classes" description="Asset classes named most often in postings." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={assetClassData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 80 }}>
               <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
