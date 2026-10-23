@@ -167,7 +167,7 @@ function buildSvg(jobs) {
     .map((f, i) => {
       const y = yByIndex[i];
       const dot = "";
-      const firmName = `<text x="${nColX - 8}" y="${y + rowH / 2 + 4}" text-anchor="end" font-size="12" fill="#1a1a1a" font-weight="500">${escapeText(shortenFirm(f.firm))}</text>`;
+      const firmName = `<text x="${nColX - 8}" y="${y + rowH / 2 + 4}" text-anchor="end" font-size="14" fill="#1a1a1a" font-weight="500">${escapeText(shortenFirm(f.firm))}</text>`;
       const nText = `<text x="${nColX + nW - 4}" y="${y + rowH / 2 + 4}" text-anchor="end" font-size="11" fill="#6b6b6b" font-weight="500" font-variant-numeric="tabular-nums">${f.total}</text>`;
       const cells = TECHS.map((l, j) => {
         const cellX = plotStartX + j * cellW;
@@ -200,9 +200,9 @@ export default function TechStackHeatmap({ jobs }) {
   const { svg, totalJobs, numFirms } = useMemo(() => buildSvg(jobs || []), [jobs]);
 
   return (
-    <div className="bg-[#fbfbfa]">
-      <div className="dk-container py-6 sm:py-8">
-        <h1 className="dk-h1">
+    <div>
+      <div className="dk-container page">
+        <h1 className="dk-h1 page-title-solo">
           Quant tech heatmap
         </h1>
         <div className="overflow-x-auto -mx-[15px] sm:mx-0">
@@ -212,15 +212,10 @@ export default function TechStackHeatmap({ jobs }) {
             dangerouslySetInnerHTML={{ __html: svg }}
           />
         </div>
-        <div className="mt-3 text-[11.5px] text-[#6b6b6b] flex justify-end">
-          <span className="text-[#1a1a1a] font-semibold">kadoa.com/quant</span>
-          <span className="mx-2">·</span>
-          <a
-            href="https://github.com/kadoa-org/quant-jobs"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-inherit no-underline"
-          >
+        <div className="page-credit">
+          <strong>kadoa.com/quant</strong>
+          <span aria-hidden="true">·</span>
+          <a href="https://github.com/kadoa-org/quant-jobs" target="_blank" rel="noopener noreferrer">
             github.com/kadoa-org/quant-jobs
           </a>
         </div>

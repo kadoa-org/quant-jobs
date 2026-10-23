@@ -7,29 +7,47 @@
   scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
 }
 
+/* GOV.UK type scale: 19px body, 36/24/19px headings, on white. */
+body { background: #fff; font-size: 19px; line-height: 1.4; }
+h1 { font-size: 36px; line-height: 1.12; margin-bottom: 20px; }
+h2 { font-size: 24px; line-height: 1.25; margin-bottom: 20px; }
+h3 { font-size: 19px; line-height: 1.3; margin-bottom: 15px; }
+@media (max-width: 640px) { h1 { font-size: 27px; } }
+
+/* Page padding under the nav: 40px top, 60px bottom (25/40 on a phone). */
+.page { padding-top: 40px; padding-bottom: 60px; }
+@media (max-width: 640px) { .page { padding-top: 25px; padding-bottom: 40px; } }
+/* A page title with nothing under it keeps the 40px title-to-content gap. */
+.dk-h1.page-title-solo { margin-bottom: 40px; }
+.page-lede { font-size: 19px; line-height: 1.45; color: var(--dk-muted); max-width: 640px; margin: 0 0 40px; }
+/* Credit line under the charts. */
+.page-credit { margin-top: 15px; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 0 8px; font-size: 16px; color: var(--dk-muted); }
+.page-credit strong { color: var(--dk-ink); font-weight: 600; }
+.page-credit a { color: inherit; text-decoration: none; }
+
 /* ── Stack cards (firm tech-stack browser), GOV.UK design system ─────── */
 /* Summary-card pattern: square corners, #b1b4b6 borders, grey header band. */
-.stk-head { max-width: 640px; margin-bottom: 18px; }
+.stk-head { max-width: 640px; margin-bottom: 30px; }
 .stk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
 .stk-card { background: #fff; border: 1px solid #b1b4b6; }
 .stk-card-head { display: flex; justify-content: space-between; align-items: baseline; background: #f3f2f1; padding: 10px 15px; border-bottom: 1px solid #b1b4b6; }
 .stk-card > div:not(.stk-card-head) { padding: 0 15px 8px; }
-.stk-firmlink { border: 0; background: none; font: inherit; font-size: 17px; font-weight: 700; cursor: pointer; padding: 0; color: #1d70b8; text-decoration: underline; text-underline-offset: 2px; text-align: left; }
+.stk-firmlink { border: 0; background: none; font: inherit; font-size: 19px; font-weight: 700; cursor: pointer; padding: 0; color: #1d70b8; text-decoration: underline; text-underline-offset: 2px; text-align: left; }
 .stk-firmlink:hover { color: #003078; text-decoration-thickness: 3px; }
 .stk-firmlink:focus-visible { outline: 3px solid #ffdd00; background: #ffdd00; color: #0b0c0c; box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c; text-decoration: none; }
 .stk-band { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-top: 1px solid #f1f0ec; }
 .stk-band:first-child { border-top: 0; }
-.stk-bl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; width: 92px; flex-shrink: 0; padding-top: 4px; }
+.stk-bl { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; width: 116px; flex-shrink: 0; padding-top: 4px; }
 .stk-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-.stk-chip { font-size: 14px; line-height: 1; padding: 4px 8px 5px; white-space: nowrap; cursor: pointer; font-family: inherit; border-radius: 0; }
+.stk-chip { font-size: 16px; line-height: 1; padding: 4px 8px 5px; white-space: nowrap; cursor: pointer; font-family: inherit; border-radius: 0; }
 .stk-chip:hover { filter: brightness(.95); }
-.stk-none { color: #505a5f; font-size: 13px; padding-top: 4px; }
+.stk-none { color: #505a5f; font-size: 16px; padding-top: 4px; }
 .stk-detail { background: #fff; border: 1px solid #b1b4b6; max-width: 760px; }
 .stk-detail-head { display: flex; justify-content: space-between; align-items: baseline; background: #f3f2f1; padding: 12px 18px; border-bottom: 1px solid #b1b4b6; }
 .stk-detail-head h2 { font-size: 24px; margin: 0; }
 .stk-detail > div:not(.stk-detail-head) { padding: 4px 18px 12px; }
 .stk-tech-h { font-size: 24px; margin-bottom: 16px; }
-.stk-tech-h .stk-chip { font-size: 18px; cursor: default; vertical-align: 2px; }
+.stk-tech-h .stk-chip { font-size: 19px; cursor: default; vertical-align: 2px; }
 .stk-tech-list { display: grid; gap: 0; max-width: 880px; border: 1px solid #b1b4b6; background: #fff; }
 .stk-tech-row { display: grid; grid-template-columns: 200px 140px 1fr 90px; gap: 12px; align-items: center; padding: 10px 15px; border-top: 1px solid #f1f0ec; }
 .stk-tech-row:first-child { border-top: 0; }
@@ -37,11 +55,11 @@
 /* Lens rows: share bar (how much of the firm's hiring names the tech) + jobs link. */
 .stk-lens-track { height: 18px; background: #f3f2f1; position: relative; align-self: center; }
 .stk-lens-bar { position: absolute; left: 0; top: 0; bottom: 0; }
-.stk-lens-jobs { font-size: 14px; white-space: nowrap; justify-self: end; }
+.stk-lens-jobs { font-size: 16px; white-space: nowrap; justify-self: end; }
 .stk-count { font-variant-numeric: tabular-nums; }
 /* Matrix layer tabs: quick jump to one stack layer without horizontal scroll. */
 .stk-mx-tabs { display: flex; gap: 8px; margin: 0 0 16px; flex-wrap: wrap; }
-.stk-mx-tab { font: inherit; font-size: 14px; padding: 5px 12px; background: #f3f2f1; border: 1px solid #b1b4b6; cursor: pointer; color: #1d70b8; }
+.stk-mx-tab { font: inherit; font-size: 16px; padding: 5px 12px; background: #f3f2f1; border: 1px solid #b1b4b6; cursor: pointer; color: #1d70b8; }
 .stk-mx-tab:hover { background: #e8e6e3; }
 .stk-mx-tab:focus-visible { outline: 3px solid #ffdd00; }
 .stk-mx-tab-on { background: #0b0c0c; border-color: #0b0c0c; color: #fff; cursor: default; }
@@ -49,13 +67,14 @@
 /* Matrix view: firms x techs, layer-tinted squares, sticky firm column. */
 .stk-mx-scroll { overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
 .stk-mx { border-collapse: collapse; }
-.stk-mx-grp { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; text-align: left; padding: 0 6px 6px; }
+.stk-mx-grp { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; text-align: left; padding: 0 6px 6px; }
 .stk-mx-tech { height: 100px; vertical-align: bottom; padding: 0 0 6px; }
-.stk-mx-techbtn { border: 0; background: none; padding: 0; cursor: pointer; writing-mode: vertical-rl; transform: rotate(180deg); font: inherit; font-size: 12.5px; font-weight: 700; color: #0b0c0c; white-space: nowrap; }
+.stk-mx-techbtn { border: 0; background: none; padding: 0; cursor: pointer; writing-mode: vertical-rl; transform: rotate(180deg); font: inherit; font-size: 14px; font-weight: 700; color: #0b0c0c; white-space: nowrap; }
 .stk-mx-techbtn:hover span { text-decoration: underline; color: #1d70b8; }
 .stk-mx-techbtn:focus-visible { outline: 3px solid #ffdd00; }
 .stk-mx-corner { position: sticky; left: 0; background: #fff; z-index: 2; }
-.stk-mx-firm { position: sticky; left: 0; background: #fff; z-index: 1; font-size: 13.5px; text-align: right; padding: 0 10px; white-space: nowrap; box-shadow: 6px 0 6px -6px rgba(11, 12, 12, 0.25); }
+.stk-mx-firm { position: sticky; left: 0; background: #fff; z-index: 1; font-size: 14px; text-align: right; padding: 0 10px; white-space: nowrap; box-shadow: 6px 0 6px -6px rgba(11, 12, 12, 0.25); }
+.stk-mx-firm .stk-firmlink { font-size: 16px; }
 .stk-mx tbody tr:nth-child(even) td { background: #f7f6f5; }
 .stk-mx tbody tr:nth-child(odd) td.stk-mx-firm { background: #fff; }
 .stk-mx tbody tr:nth-child(even) td.stk-mx-firm { background: #f7f6f5; }
@@ -68,32 +87,31 @@
 @media (max-width: 720px) {
   /* Full-bleed scroll area; the sticky firm column stays pinned. */
   .stk-mx-scroll { margin: 0 -15px; padding: 0 0 8px 15px; }
-  .stk-mx-firm { font-size: 12px; padding: 0 8px; }
+  .stk-mx-firm { font-size: 14px; padding: 0 8px; }
   .stk-mx-firm .stk-firmlink { display: inline-block; max-width: 118px; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
   .stk-mx-cell { width: 38px; min-width: 38px; height: 32px; }
   .stk-mx-sq { width: 20px; height: 20px; }
   .stk-mx-tech { height: 92px; }
-  .stk-mx-techbtn { font-size: 12px; }
 }
 
 /* GOV.UK-style sub navigation for the firm/technology grouping: plain text
    items with a blue bar under the active one (tabs are for secondary content
    in GDS, not view switching). */
 .stk-subnav { display: flex; gap: 24px; margin: 10px 0 4px; border-bottom: 1px solid #b1b4b6; }
-.stk-subnav-item { font: inherit; font-size: 16px; background: none; border: 0; padding: 6px 2px 10px; cursor: pointer; color: #1d70b8; text-decoration: underline; text-underline-offset: 2px; }
+.stk-subnav-item { font: inherit; font-size: 19px; background: none; border: 0; padding: 6px 2px 10px; cursor: pointer; color: #1d70b8; text-decoration: underline; text-underline-offset: 2px; }
 .stk-subnav-item:hover { color: #003078; }
 .stk-subnav-item:focus-visible { outline: 3px solid #ffdd00; }
 .stk-subnav-on { color: #0b0c0c; font-weight: 700; text-decoration: none; box-shadow: inset 0 -4px 0 #1d70b8; cursor: default; }
 .stk-idx-section { margin-bottom: 30px; }
-.stk-idx-h { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin: 0 0 10px; }
-.stk-idx-firms { font-size: 14px; color: #0b0c0c; }
+.stk-idx-h { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin: 0 0 10px; }
+.stk-idx-firms { font-size: 16px; color: #0b0c0c; }
 .stk-idx-sep { color: #b1b4b6; }
-.stk-firmlink-sm { border: 0; background: none; font: inherit; font-size: 14px; padding: 0; cursor: pointer; color: #1d70b8; text-decoration: underline; text-underline-offset: 2px; }
+.stk-firmlink-sm { border: 0; background: none; font: inherit; font-size: 16px; padding: 0; cursor: pointer; color: #1d70b8; text-decoration: underline; text-underline-offset: 2px; }
 .stk-firmlink-sm:hover { color: #003078; }
-.stk-idx-more { font-size: 14px; margin-left: 6px; }
+.stk-idx-more { font-size: 16px; margin-left: 6px; }
 /* Results line: count + plain GOV.UK links; green buttons are for primary
    start actions, not filter side effects. */
-.stk-results { margin: 0 0 18px; font-size: 16px; color: #0b0c0c; }
+.stk-results { margin: 0 0 20px; font-size: 16px; color: #0b0c0c; }
 .stk-results b { font-weight: 700; }
 .stk-link { border: 0; background: none; font: inherit; padding: 0; cursor: pointer; color: #1d70b8; text-decoration: underline; text-underline-offset: 2px; }
 .stk-link:hover { color: #003078; text-decoration-thickness: 3px; }
@@ -109,11 +127,12 @@
    the Jobs table filtered to those postings. Rows are clickable anywhere, with
    a real <button> on the label so keyboard and screen-reader users get the same
    affordance (GOV.UK yellow focus). */
-.int-wrap { padding-top: 24px; padding-bottom: 48px; }
-.int-lede { font: 400 var(--dk-fs-l)/1.5 var(--dk-font); color: var(--dk-muted); max-width: 70ch; margin: 0 0 18px; }
+.int-wrap { padding-top: 40px; padding-bottom: 60px; }
+@media (max-width: 640px) { .int-wrap { padding-top: 25px; padding-bottom: 40px; } }
+.int-lede { font: 400 var(--dk-fs-m)/1.45 var(--dk-font); color: var(--dk-muted); max-width: 640px; margin: 0 0 40px; }
 .int-lede strong { color: var(--dk-ink); }
-.int-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 24px 32px; margin-top: 4px; }
-.int-panel h2 { font: 700 var(--dk-fs-l)/1.3 var(--dk-font); margin: 0 0 10px; padding-top: 8px; border-top: 4px solid var(--dk-link); }
+.int-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 40px 30px; }
+.int-panel h2 { font: 700 var(--dk-fs-l)/1.25 var(--dk-font); margin: 0 0 15px; padding-top: 8px; border-top: 4px solid var(--dk-link); }
 .int-table { font-size: var(--dk-fs-s); }
 .int-table .int-rank { width: 40px; color: var(--dk-muted); }
 .int-table .int-extra { width: 96px; color: var(--dk-muted); }
@@ -123,36 +142,39 @@
 .int-pickbtn:focus-visible { outline: 3px solid var(--dk-focus); background: var(--dk-focus); color: #0b0c0c; text-decoration: none; }
 .int-plain { font-weight: 600; }
 .int-more { margin: 6px 0 0; }
-.int-note { margin: 18px 0 0; max-width: 90ch; }
+.int-note { margin: 40px 0 0; max-width: 640px; }
 @media (max-width: 640px) {
   .int-grid { grid-template-columns: 1fr; }
   .int-table .int-extra { display: none; }
 }
 /* Drill-down return path: a GOV.UK-style back link above the filtered table. */
-.int-back { padding-top: 12px; }
+.int-back { padding-top: 20px; }
 .int-backlink { border: 0; background: none; font: inherit; font-size: var(--dk-fs-s); padding: 0; cursor: pointer; color: var(--dk-link); text-decoration: underline; text-underline-offset: 2px; }
 .int-backlink:hover { color: #144e81; text-decoration-thickness: 3px; }
 .int-backlink:focus-visible { outline: 3px solid var(--dk-focus); background: var(--dk-focus); color: #0b0c0c; text-decoration: none; }
 
-/* Chart cards sit in a grid here, so the grid gap spaces them rather than each card's own margin. */
+/* Chart cards sit in a grid here, so the grid gap spaces them rather than each card's own margin:
+   60px apart (40 on a phone), two up from 1024px with a 30px gutter. */
+.dk-card-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+@media (min-width: 641px) { .dk-card-grid { gap: 60px; } }
+@media (min-width: 1024px) { .dk-card-grid--2up { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 60px 30px; } }
 .dk-card-grid > .dk-card { margin: 0; }
 .dk-card__footer a { color: var(--dk-link); text-decoration: underline; text-underline-offset: 2px; }
 
-/* Home: title and one line of scope above the jobs table; the sides come from .dk-container. */
-.home-intro { padding: 20px 0 4px; max-width: 1100px; }
-@media (max-width: 640px) { .home-intro { padding: 16px 0 0; } }
-.home-lede { font-size: 17px; line-height: 1.45; color: var(--dk-muted); margin: 0 0 12px; max-width: 80ch; }
+/* Home: title and one line of scope above the jobs table; the sides and top padding come from .dk-container.page. */
+.home-intro { margin: 0 0 40px; }
+@media (max-width: 640px) { .home-intro { margin-bottom: 25px; } }
+.home-lede { font-size: 19px; line-height: 1.45; color: var(--dk-muted); margin: 0; max-width: 640px; }
 /* Firms table (FirmsTable.jsx): header buttons that sort, styled as plain header text. */
-.firms-table__wrap { margin: 0 0 36px; }
-@media (max-width: 640px) { .firms-table__wrap { margin: 0 0 24px; } }
+.firms-table__wrap { margin: 0; }
 .firms-table__sort { appearance: none; background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: inherit; cursor: pointer; white-space: nowrap; }
 .firms-table__sort:focus-visible { outline: 3px solid var(--dk-focus); }
 
 /* Filter bar (FilterBar.jsx): below the page title, a "Filter by" label and buttons that look like controls. */
-.filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 0 14px; position: relative; z-index: 100; }
-@media (max-width: 640px) { .filter-bar { padding: 0 0 12px; } }
+.filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 0 0 20px; position: relative; z-index: 100; }
+@media (max-width: 640px) { .filter-bar { padding: 0 0 15px; } }
 .filter-bar__label { font-size: 16px; font-weight: 700; margin-right: 4px; }
-.filter-chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; background: #fff; border: 1px solid var(--dk-gov-border, #b1b4b6); color: #0b0c0c; font-size: 16px; white-space: nowrap; cursor: pointer; }
+.filter-chip { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 10px; background: #fff; border: 1px solid var(--dk-gov-border, #b1b4b6); color: #0b0c0c; font-size: 16px; white-space: nowrap; cursor: pointer; }
 .filter-chip:hover { border-color: #0b0c0c; }
 .filter-chip:focus-visible { outline: 3px solid var(--dk-focus, #fd0); outline-offset: 0; box-shadow: inset 0 0 0 2px #0b0c0c; }
 .filter-chip--active { border-color: #1d70b8; box-shadow: inset 0 0 0 1px #1d70b8; }
@@ -160,4 +182,5 @@
 .filter-chip__clear { display: inline-flex; align-items: center; padding-left: 6px; margin-left: 2px; border-left: 1px solid var(--dk-gov-border, #b1b4b6); color: #505a5f; }
 .filter-chip__clear:hover { color: #0b0c0c; }
 .filter-bar__clear { font-size: 16px; color: var(--dk-link); text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; cursor: pointer; margin-left: 4px; }
-.dash-filters .filter-bar { padding: 0 0 16px; }
+.dash-filters .filter-bar { padding: 0 0 40px; }
+@media (max-width: 640px) { .dash-filters .filter-bar { padding-bottom: 25px; } }

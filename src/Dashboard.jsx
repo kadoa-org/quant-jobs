@@ -42,7 +42,7 @@ const tooltipStyle = {
   background: "white",
   border: "1px solid #e5e7eb",
   borderRadius: 8,
-  fontSize: 11,
+  fontSize: 14,
   color: "#374151",
   boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
 };
@@ -174,8 +174,7 @@ export default function Dashboard({ jobs, firms, filters }) {
   };
 
   return (
-    <div className="py-3 sm:py-5 bg-[#fbfbfa]">
-      <div className="dk-container">
+    <div className="dk-container page">
       {/* Headline figures: a snapshot of the postings open now, so the heading names it and the date runs to the
           newest posting. */}
       <h1 className="dk-h1">Hiring insights</h1>
@@ -191,15 +190,15 @@ export default function Dashboard({ jobs, firms, filters }) {
         ]}
       />
 
-      <div className="dk-card-grid grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="dk-card-grid dk-card-grid--2up">
         {/* Tech stack by firm type - THE key chart for r/quant */}
         <ChartCard title="Tech stack by firm type" description="Share of jobs mentioning each language, by firm type." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={techByFirmType} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 45 }}>
-              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 12 }} width={40} />
+            <BarChart data={techByFirmType} layout="vertical" margin={{ top: 0, right: 15, bottom: 0, left: 0 }}>
+              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 14 }} tickFormatter={(v) => `${v}%`} />
+              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 14 }} width={70} />
               <Tooltip contentStyle={tooltipStyle} formatter={(v) => `${v}%`} />
-              <Legend verticalAlign="top" formatter={(v) => <span style={{ color: "#0b0c0c" }}>{firmTypeLabels[v] || v}</span>} wrapperStyle={{ fontSize: 12, paddingBottom: 8 }} />
+              <Legend verticalAlign="top" formatter={(v) => <span style={{ color: "#0b0c0c" }}>{firmTypeLabels[v] || v}</span>} wrapperStyle={{ fontSize: 14, paddingBottom: 10 }} />
               {["proprietary", "hedge_fund", "asset_manager"].map((type, i) => (
                 <Bar key={type} dataKey={type} fill={firmTypeColors[i]} radius={[0, 2, 2, 0]} barSize={6} />
               ))}
@@ -210,9 +209,9 @@ export default function Dashboard({ jobs, firms, filters }) {
         {/* Programming Languages */}
         <ChartCard title="Programming languages" description="Jobs mentioning each language." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={languageData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 75 }}>
-              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 12 }} width={70} />
+            <BarChart data={languageData} layout="vertical" margin={{ top: 0, right: 15, bottom: 0, left: 0 }}>
+              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 14 }} />
+              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 14 }} width={95} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="value" fill="#12436d" radius={[0, 3, 3, 0]} barSize={18} />
             </BarChart>
@@ -222,9 +221,9 @@ export default function Dashboard({ jobs, firms, filters }) {
         {/* Technologies & Tools */}
         <ChartCard title="Technologies and tools" description="Frameworks, platforms and tools named in postings." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={techData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 80 }}>
-              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 12 }} width={75} />
+            <BarChart data={techData} layout="vertical" margin={{ top: 0, right: 15, bottom: 0, left: 0 }}>
+              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 14 }} />
+              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 14 }} width={100} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="value" fill="#12436d" radius={[0, 3, 3, 0]} barSize={18} />
             </BarChart>
@@ -234,9 +233,9 @@ export default function Dashboard({ jobs, firms, filters }) {
         {/* Role Categories */}
         <ChartCard title="Role categories" description="Jobs by role." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={roleData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 80 }}>
-              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 12 }} width={75} />
+            <BarChart data={roleData} layout="vertical" margin={{ top: 0, right: 15, bottom: 0, left: 0 }}>
+              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 14 }} />
+              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 14 }} width={135} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="value" radius={[0, 3, 3, 0]} barSize={18}>
                 {roleData.map((entry, i) => (
@@ -250,9 +249,9 @@ export default function Dashboard({ jobs, firms, filters }) {
         {/* Top Locations */}
         <ChartCard title="Top locations" description="Cities with the most postings." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={locationData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 70 }}>
-              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 12 }} width={65} />
+            <BarChart data={locationData} layout="vertical" margin={{ top: 0, right: 15, bottom: 0, left: 0 }}>
+              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 14 }} />
+              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 14 }} width={150} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="value" fill="#12436d" radius={[0, 3, 3, 0]} barSize={18} />
             </BarChart>
@@ -262,9 +261,9 @@ export default function Dashboard({ jobs, firms, filters }) {
         {/* Education Requirements */}
         <ChartCard title="Education requirements" description="Minimum education named in postings." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={educationData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 90 }}>
-              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 12 }} width={85} />
+            <BarChart data={educationData} layout="vertical" margin={{ top: 0, right: 15, bottom: 0, left: 0 }}>
+              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 14 }} />
+              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 14 }} width={120} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="value" fill="#12436d" radius={[0, 3, 3, 0]} barSize={18} />
             </BarChart>
@@ -274,9 +273,9 @@ export default function Dashboard({ jobs, firms, filters }) {
         {/* Seniority Distribution */}
         <ChartCard title="Seniority" description="Jobs by seniority level." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={seniorityData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 70 }}>
-              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 12 }} width={65} />
+            <BarChart data={seniorityData} layout="vertical" margin={{ top: 0, right: 15, bottom: 0, left: 0 }}>
+              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 14 }} />
+              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 14 }} width={105} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="value" fill="#12436d" radius={[0, 3, 3, 0]} barSize={18} />
             </BarChart>
@@ -286,15 +285,14 @@ export default function Dashboard({ jobs, firms, filters }) {
         {/* Asset Classes */}
         <ChartCard title="Asset classes" description="Asset classes named most often in postings." footer={SOURCE}>
           <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={assetClassData} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 80 }}>
-              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 12 }} width={75} />
+            <BarChart data={assetClassData} layout="vertical" margin={{ top: 0, right: 15, bottom: 0, left: 0 }}>
+              <XAxis type="number" tick={{ fill: "#505a5f", fontSize: 14 }} />
+              <YAxis type="category" dataKey="name" tick={{ fill: "#0b0c0c", fontSize: 14 }} width={125} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="value" fill="#12436d" radius={[0, 3, 3, 0]} barSize={18} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
-      </div>
       </div>
     </div>
   );

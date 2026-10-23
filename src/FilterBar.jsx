@@ -24,17 +24,17 @@ export function FilterDropdown({ options, selected, onChange, onClose, singleSel
   return (
     <div
       ref={ref}
-      className="absolute top-full left-0 mt-1 z-[200] bg-white border border-[#e0e0e0]  shadow-lg min-w-[180px] sm:min-w-[220px] max-h-[60vh] sm:max-h-[340px] flex flex-col overflow-hidden"
+      className="absolute top-full left-0 mt-1 z-[200] bg-white border border-[#e0e0e0]  shadow-lg min-w-[220px] sm:min-w-[280px] max-h-[60vh] sm:max-h-[400px] flex flex-col overflow-hidden"
     >
       {options.length > 6 && (
-        <div className="px-2 py-1.5 border-b border-[#f0f0f0]">
+        <div className="px-3 py-2 border-b border-[#f0f0f0]">
           <input
             ref={inputRef}
             type="text"
             placeholder="Filter..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full text-[13px] text-[#191919] placeholder:text-[#b0b0b0] outline-none bg-transparent"
+            className="w-full text-[16px] text-[#191919] placeholder:text-[#b0b0b0] outline-none bg-transparent"
           />
         </div>
       )}
@@ -51,7 +51,7 @@ export function FilterDropdown({ options, selected, onChange, onClose, singleSel
                   onChange(isSelected ? selected.filter((v) => v !== value) : [...selected, value]);
                 }
               }}
-              className="w-full flex items-center justify-between px-3 h-[30px] text-[13px] transition-colors hover:bg-[#f5f5f5]"
+              className="w-full flex items-center justify-between px-3 h-[38px] text-[16px] transition-colors hover:bg-[#f5f5f5]"
             >
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 {!singleSelect && (
@@ -74,11 +74,11 @@ export function FilterDropdown({ options, selected, onChange, onClose, singleSel
                   {label}
                 </span>
               </div>
-              <span className="text-[12px] text-[#b0b0b0] ml-4 flex-shrink-0">{count}</span>
+              <span className="text-[16px] text-[#6f777b] ml-4 flex-shrink-0">{count}</span>
             </button>
           );
         })}
-        {filtered.length === 0 && <div className="px-3 py-2 text-[12px] text-[#b0b0b0]">No results</div>}
+        {filtered.length === 0 && <div className="px-3 py-2 text-[16px] text-[#6f777b]">No results</div>}
       </div>
     </div>
   );

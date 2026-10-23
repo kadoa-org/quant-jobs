@@ -200,15 +200,15 @@ export function aggregateLocations(jobs) {
   return { cities: cities.slice(0, MAX_CITIES), hybridLeaders, totalJobs: validFirmJobs.length };
 }
 
-function annotationFor(c) {
-  return { text: c.topFirms.map((f) => `${f.firm} ${f.count}`).join(" · ") };
+function annotationFor(c, max = Infinity) {
+  return { text: c.topFirms.slice(0, max).map((f) => `${f.firm} ${f.count}`).join(" · ") };
 }
 
 export function buildLocationsLollipopSvg(cities) {
   // Linear-style horizontal bar chart: minimal chrome, near-invisible
-  // gridlines, tight Inter-style typography, monochrome accent.
-  const W = 1300;
-  const left = 24;
+  // gridlines, monochrome accent. 860 wide fits the card panel in the 960px page.
+  const W = 860;
+  const left = 4;
   const panelW = W - left * 2;
   const top = 28;
   const rowH = 32;
@@ -216,10 +216,10 @@ export function buildLocationsLollipopSvg(cities) {
   const BAR_FILL = "#0f766e";
 
   const flagW = 26;
-  const cityLabelW = 110;
-  const totalW = 50;
+  const cityLabelW = 100;
+  const totalW = 64;
   const barXStart = left + flagW + cityLabelW + 16;
-  const annotationW = 560;
+  const annotationW = 390;
   const barXEnd = left + panelW - totalW - 12 - annotationW;
   const barMaxW = barXEnd - barXStart;
   const annotationX = barXEnd + 20;
@@ -236,23 +236,22 @@ export function buildLocationsLollipopSvg(cities) {
     );
   }
 
-  // Column headers calibrated to Linear's 13.5px/500 secondary scale.
   const headers =
-    `<text x="${left + flagW + cityLabelW}" y="${top - 9}" text-anchor="end" font-size="12.5" font-weight="500" fill="#7a7d80">City</text>` +
-    `<text x="${annotationX}" y="${top - 9}" font-size="12.5" font-weight="500" fill="#7a7d80">Top firms</text>` +
-    `<text x="${totalX + totalW - 4}" y="${top - 9}" text-anchor="end" font-size="12.5" font-weight="500" fill="#7a7d80">Postings</text>`;
+    `<text x="${left + flagW + cityLabelW}" y="${top - 9}" text-anchor="end" font-size="14" font-weight="500" fill="#505a5f">City</text>` +
+    `<text x="${annotationX}" y="${top - 9}" font-size="14" font-weight="500" fill="#505a5f">Top firms</text>` +
+    `<text x="${totalX + totalW - 4}" y="${top - 9}" text-anchor="end" font-size="14" font-weight="500" fill="#505a5f">Postings</text>`;
 
   const rows = cities
     .map((c, i) => {
       const y = top + i * rowH + rowH / 2;
       const flag = flagEmoji(CITY_ISO[c.name]);
-      const ann = annotationFor(c);
+      const ann = annotationFor(c, 3);
       const barW = xFor(c.total);
       return [
         `<text x="${left + flagW - 4}" y="${y + 6}" text-anchor="end" font-size="18">${flag}</text>`,
         `<text x="${left + flagW + cityLabelW}" y="${y + 5}" text-anchor="end" font-size="14" font-weight="500" fill="#191919">${escapeText(c.name)}</text>`,
         `<rect x="${barXStart}" y="${y - barH / 2}" width="${barW}" height="${barH}" rx="3" fill="${BAR_FILL}" fill-opacity="0.85"/>`,
-        `<text x="${annotationX}" y="${y + 5}" font-size="13" fill="#5c5c5f">${escapeText(ann.text)}</text>`,
+        `<text x="${annotationX}" y="${y + 5}" font-size="14" fill="#505a5f">${escapeText(ann.text)}</text>`,
         `<text x="${totalX + totalW - 4}" y="${y + 5}" text-anchor="end" font-size="14" font-weight="500" fill="#191919" font-variant-numeric="tabular-nums">${c.total}</text>`,
       ].join("");
     })
@@ -266,7 +265,7 @@ export function buildLocationsLollipopSvg(cities) {
 // inline text (keep it for desktop) so flag + city + bar + total all
 // fit in a phone viewport without horizontal scroll.
 export function buildLocationsLollipopSvgMobile(cities) {
-  const W = 360;
+  const W = 300;
   const left = 8;
   const top = 28;
   const rowH = 30;
@@ -274,7 +273,7 @@ export function buildLocationsLollipopSvgMobile(cities) {
   const BAR_FILL = "#0f766e";
 
   const flagW = 22;
-  const cityLabelW = 78;
+  const cityLabelW = 92;
   const totalW = 36;
   const barXStart = left + flagW + cityLabelW + 10;
   const totalX = W - totalW - 4;
@@ -295,9 +294,9 @@ export function buildLocationsLollipopSvgMobile(cities) {
       const barW = xFor(c.total);
       return [
         `<text x="${left + flagW - 4}" y="${y + 5}" text-anchor="end" font-size="15">${flag}</text>`,
-        `<text x="${left + flagW + cityLabelW}" y="${y + 4}" text-anchor="end" font-size="12" font-weight="500" fill="#191919">${escapeText(c.name)}</text>`,
+        `<text x="${left + flagW + cityLabelW}" y="${y + 5}" text-anchor="end" font-size="14" font-weight="500" fill="#191919">${escapeText(c.name)}</text>`,
         `<rect x="${barXStart}" y="${y - barH / 2}" width="${barW}" height="${barH}" rx="2" fill="${BAR_FILL}" fill-opacity="0.85"/>`,
-        `<text x="${totalX + totalW - 4}" y="${y + 4}" text-anchor="end" font-size="12" font-weight="500" fill="#191919" font-variant-numeric="tabular-nums">${c.total}</text>`,
+        `<text x="${totalX + totalW - 4}" y="${y + 5}" text-anchor="end" font-size="14" font-weight="500" fill="#191919" font-variant-numeric="tabular-nums">${c.total}</text>`,
       ].join("");
     })
     .join("");
@@ -329,8 +328,8 @@ export function buildHybridLeaderboardSvg(hybridLeaders) {
   const rows = expandModeRows(hybridLeaders, 15);
   if (rows.length === 0) return { svg: "", width: 0, height: 0 };
 
-  const W = 1300;
-  const left = 24;
+  const W = 860;
+  const left = 4;
   const top = 28;
   const rowH = 32;
   const barH = 12;
@@ -338,21 +337,21 @@ export function buildHybridLeaderboardSvg(hybridLeaders) {
   const labelW = 160;
   const labelX = left + labelW;
   const barX = labelX + 16;
-  const barMaxW = 360;
+  const barMaxW = 500;
 
   const maxCount = Math.max(...rows.map((r) => r.count), 1);
 
   // Legend in the top-right of the chart area
-  const legendX = barX + barMaxW + 80;
+  const legendX = W - 170;
   const legend =
     `<rect x="${legendX}" y="${top - 18}" width="10" height="10" rx="2" fill="${TEAL}"/>` +
-    `<text x="${legendX + 16}" y="${top - 9}" font-size="12" font-weight="500" fill="#191919">Hybrid</text>` +
-    `<rect x="${legendX + 78}" y="${top - 18}" width="10" height="10" rx="2" fill="${ORANGE}"/>` +
-    `<text x="${legendX + 94}" y="${top - 9}" font-size="12" font-weight="500" fill="#191919">Remote</text>`;
+    `<text x="${legendX + 16}" y="${top - 9}" font-size="14" font-weight="500" fill="#191919">Hybrid</text>` +
+    `<rect x="${legendX + 84}" y="${top - 18}" width="10" height="10" rx="2" fill="${ORANGE}"/>` +
+    `<text x="${legendX + 100}" y="${top - 9}" font-size="14" font-weight="500" fill="#191919">Remote</text>`;
 
   const headers =
-    `<text x="${labelX}" y="${top - 9}" text-anchor="end" font-size="12.5" font-weight="500" fill="#7a7d80">Firm</text>` +
-    `<text x="${barX}" y="${top - 9}" font-size="12.5" font-weight="500" fill="#7a7d80">Hybrid &amp; remote postings</text>` +
+    `<text x="${labelX}" y="${top - 9}" text-anchor="end" font-size="14" font-weight="500" fill="#505a5f">Firm</text>` +
+    `<text x="${barX}" y="${top - 9}" font-size="14" font-weight="500" fill="#505a5f">Hybrid &amp; remote postings</text>` +
     legend;
 
   const rowsHtml = rows
@@ -364,7 +363,7 @@ export function buildHybridLeaderboardSvg(hybridLeaders) {
       return [
         `<text x="${labelX}" y="${y + 5}" text-anchor="end" font-size="14" font-weight="600" fill="#191919">${escapeText(r.firm)}</text>`,
         `<rect x="${barX}" y="${y - barH / 2}" width="${barW}" height="${barH}" rx="3" fill="${color}" fill-opacity="0.88"/>`,
-        `<text x="${valX}" y="${y + 5}" font-size="13.5" font-weight="700" fill="${color}" font-variant-numeric="tabular-nums">${r.count}</text>`,
+        `<text x="${valX}" y="${y + 5}" font-size="14" font-weight="700" fill="${color}" font-variant-numeric="tabular-nums">${r.count}</text>`,
       ].join("");
     })
     .join("");
@@ -377,7 +376,7 @@ export function buildHybridLeaderboardSvg(hybridLeaders) {
 export function buildHybridLeaderboardSvgMobile(hybridLeaders) {
   const rows = expandModeRows(hybridLeaders, 15);
   if (rows.length === 0) return { svg: "", width: 0, height: 0 };
-  const W = 360;
+  const W = 300;
   const left = 8;
   const top = 28;
   const rowH = 30;

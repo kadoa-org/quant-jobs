@@ -187,20 +187,20 @@ function InsightsNav({ view, setView, onFirms }) {
       {open && (
         <div className="bg-white border-b border-[#b1b4b6]">
           <div className="dk-container py-6">
-            <div className="flex flex-wrap gap-x-10 gap-y-5">
+            <div className="flex flex-wrap gap-x-10 gap-y-6">
               {ITEMS.map((it) =>
                 it.href ? (
-                  <div key={it.key} className="w-52">
-                    <a href={it.href} className="text-[15px] font-semibold text-[#1d70b8] underline underline-offset-2">
+                  <div key={it.key} className="w-64">
+                    <a href={it.href} className="text-[16px] font-semibold text-[#1d70b8] underline underline-offset-2">
                       {it.label}
                     </a>
-                    <p className="mt-1 text-[13px] leading-snug text-[#505a5f]">{it.desc}</p>
+                    <p className="mt-1 text-[16px] leading-snug text-[#505a5f]">{it.desc}</p>
                   </div>
                 ) : (
-                  <div key={it.key} className="w-52">
+                  <div key={it.key} className="w-64">
                     <a
                       href={`#${it.key}`}
-                      className="text-[15px] font-semibold text-[#1d70b8] underline underline-offset-2"
+                      className="text-[16px] font-semibold text-[#1d70b8] underline underline-offset-2"
                       style={{ fontWeight: view === it.key ? 700 : 600 }}
                       onClick={(e) => {
                         if (e.metaKey || e.ctrlKey) return;
@@ -210,7 +210,7 @@ function InsightsNav({ view, setView, onFirms }) {
                     >
                       {it.label}
                     </a>
-                    <p className="mt-1 text-[13px] leading-snug text-[#505a5f]">{it.desc}</p>
+                    <p className="mt-1 text-[16px] leading-snug text-[#505a5f]">{it.desc}</p>
                   </div>
                 ),
               )}
@@ -384,7 +384,7 @@ export default function App({ initialPage = null }) {
         <main className="flex-1 relative">
           {view === "firms" && <FirmsTable jobs={filteredJobs} filters={filterBar(FIRM_FILTER_KEYS)} />}
           {view === "table" && (
-            <div className="dk-container">
+            <div className="dk-container page">
             {/* A job board opens on the list: title, one line of scope, then search and the table, as openquant,
                 eFinancialCareers and Wellfound do. Market figures live on the Insights pages. */}
             <div className="home-intro">

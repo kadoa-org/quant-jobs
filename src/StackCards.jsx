@@ -353,7 +353,7 @@ export default function StackCards({ jobs = [], onApply, initialData, initialPat
   // the selection (firm name, or a count segment), each carries an inline x to
   // clear just itself, and the bar spans full width under the nav.
   const chipClass = (active) =>
-    `flex items-center gap-1 h-[22px] text-[12px] sm:text-[13.5px] font-normal bg-white border transition-colors whitespace-nowrap ${
+    `flex items-center gap-1 h-10 text-[16px] font-normal bg-white border transition-colors whitespace-nowrap ${
       active
         ? "border-[#d4d4d4] text-[#191919]"
         : "border-[#d4d4d4] text-[#5c5c5f] hover:text-[#191919] hover:border-[#b0b0b0]"
@@ -375,12 +375,12 @@ export default function StackCards({ jobs = [], onApply, initialData, initialPat
   const multiPill = (key, label, selected, options) => (
     <div className="relative" key={key}>
       <button type="button" onClick={() => toggle(key)} className={chipClass(selected.length > 0)}>
-        <span className="px-[6px]">{label}</span>
+        <span className="px-2.5">{label}</span>
         {selected.length > 0 && (
           <>
-            <span className="border-l border-[#d4d4d4] px-[6px] text-[#5c5c5f]">{selected.length}</span>
+            <span className="border-l border-[#d4d4d4] px-2.5 text-[#5c5c5f]">{selected.length}</span>
             <span
-              className="border-l border-[#d4d4d4] px-[5px] text-[#9c9ca0] hover:text-[#191919] cursor-pointer flex items-center"
+              className="border-l border-[#d4d4d4] px-2 self-stretch text-[#9c9ca0] hover:text-[#191919] cursor-pointer flex items-center"
               onClick={(e) => {
                 e.stopPropagation();
                 setterFor(key)([]);
@@ -408,13 +408,13 @@ export default function StackCards({ jobs = [], onApply, initialData, initialPat
   return (
     <div className="stk">
       <div className="border-b border-black/[0.04] bg-[#fcfcfc] relative z-[100]">
-      <div className="dk-container flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 py-[5px]">
+      <div className="dk-container flex flex-wrap items-center gap-2.5 py-2.5">
         <div className="relative">
           <button type="button" onClick={() => toggle("firm")} className={chipClass(firmSel.length > 0)}>
-            <span className="px-[6px]">{firmSel[0] || "Firm"}</span>
+            <span className="px-2.5">{firmSel[0] || "Firm"}</span>
             {firmSel.length > 0 && (
               <span
-                className="border-l border-[#d4d4d4] px-[5px] text-[#9c9ca0] hover:text-[#191919] cursor-pointer flex items-center"
+                className="border-l border-[#d4d4d4] px-2 self-stretch text-[#9c9ca0] hover:text-[#191919] cursor-pointer flex items-center"
                 onClick={(e) => {
                   e.stopPropagation();
                   setFirmSel([]);
@@ -441,14 +441,14 @@ export default function StackCards({ jobs = [], onApply, initialData, initialPat
         {multiPill("type", "Firm type", typeSel, typeOptions)}
         {multiPill("tech", "Technology", techSel, techOptions)}
         {activeCount > 0 && (
-          <button type="button" onClick={clearAll} className="text-[12px] text-[#9c9ca0] hover:text-[#191919] ml-1">
+          <button type="button" onClick={clearAll} className="text-[16px] text-[#6f777b] hover:text-[#191919] ml-1">
             Clear all
           </button>
         )}
       </div>
       </div>
 
-      <div className="dk-container pt-6 pb-16">
+      <div className="dk-container page">
         <div className="stk-head">
           <h1 className="dk-h1">Tech stack</h1>
           {!lensTech && !detailFirm && (

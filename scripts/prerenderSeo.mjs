@@ -245,16 +245,17 @@ ${cssHref ? `<link rel="stylesheet" href="${cssHref}" />` : ""}
 ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : ""}
 <style>
   /* Page-only styles; the look comes from the kit's .dk-* classes in the bundle CSS. */
-  body{margin:0;background:var(--dk-bg);color:var(--dk-ink);font-family:var(--dk-font)}
+  body{margin:0;background:#fff;color:var(--dk-ink);font:19px/1.4 var(--dk-font)}
   /* vertical only — must not reset the .dk-container 0 15px side padding */
-  .seo-main{padding-top:28px;padding-bottom:64px}
-  .insights-panel-inner{padding-top:24px;padding-bottom:24px}
+  .seo-main{padding-top:40px;padding-bottom:60px}
+  @media (max-width:640px){.seo-main{padding-top:25px;padding-bottom:40px}}
+  .insights-panel-inner{padding-top:25px;padding-bottom:25px}
   .seo-crumbs{font-size:var(--dk-fs-s);color:var(--dk-muted);margin:0 0 20px}
   .seo-crumbs a{color:var(--dk-link)}
-  /* 32px, 27px on a phone: the page-title size shared by every dataset site. */
-  h1{font:700 32px/1.2 var(--dk-font);margin:0 0 10px}
+  /* 36px, 27px on a phone: the page-title size shared by every dataset site. */
+  h1{font:700 36px/1.12 var(--dk-font);margin:0 0 20px}
   @media (max-width:640px){h1{font-size:27px}}
-  .seo-lede{font:400 var(--dk-fs-l)/1.5 var(--dk-font);color:var(--dk-muted);max-width:70ch;margin:0 0 24px}
+  .seo-lede{font:400 var(--dk-fs-m)/1.45 var(--dk-font);color:var(--dk-muted);max-width:640px;margin:0 0 40px}
   .seo-lede a,.dk-hint a{color:var(--dk-link)}
   /* GOV.UK primary button (govuk-frontend .govuk-button): green fill, 2px
      bottom shadow, darker hover, yellow focus fill, presses down on :active.
@@ -267,27 +268,29 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script
   .seo-cta:focus-visible{border-color:#ffdd00;background:#ffdd00;color:#0b0c0c;box-shadow:0 2px 0 #0b0c0c;outline:none}
   .seo-apply{background:var(--dk-link);border-color:var(--dk-link);color:#fff !important;font-weight:600}
   .seo-apply:hover{background:#144e81;border-color:#144e81}
-  .seo-jd{max-width:75ch;font:400 var(--dk-fs-m)/1.55 var(--dk-font);margin-top:24px}
-  .seo-jd h2,.seo-jd h3,.seo-jd h4{font-weight:700;margin:22px 0 8px;line-height:1.3}
+  .seo-jd{max-width:640px;font:400 var(--dk-fs-m)/1.5 var(--dk-font);margin-top:40px;overflow-wrap:break-word}
+  .seo-jd h2,.seo-jd h3,.seo-jd h4{font-weight:700;margin:30px 0 15px;line-height:1.3}
+  .seo-jd h3,.seo-jd h4{font-size:var(--dk-fs-m)}
   .seo-jd h2{font-size:var(--dk-fs-l)}
-  .seo-jd p,.seo-jd li{margin:0 0 10px}
+  .seo-jd p,.seo-jd li{margin:0 0 15px}
   /* Tailwind preflight in the shared app CSS strips list-style; restore it. */
   .seo-jd ul{list-style:disc;padding-left:22px}
   .seo-jd ol{list-style:decimal;padding-left:22px}
-  .seo-back{margin-top:28px;font-size:var(--dk-fs-s)}
+  .seo-back{margin-top:40px;font-size:var(--dk-fs-s)}
   .seo-back a{color:var(--dk-link)}
   /* Firm pages. A GOV.UK summary list without borders, the weekly bars, and dates that never wrap mid-date. */
-  .firm-summary{margin:0 0 36px;font-size:16px;max-width:75ch}
+  .firm-summary{margin:0 0 40px;font-size:16px;max-width:640px}
   .firm-summary>div{display:grid;grid-template-columns:160px 1fr;gap:15px;padding:8px 0;border-bottom:1px solid var(--dk-rule-soft)}
   .firm-summary dt{font-weight:700;margin:0}
   .firm-summary dd{margin:0}
   .firm-summary a,.seo-crumbs a{color:var(--dk-link);text-decoration:underline;text-underline-offset:3px}
-  .firm-section{margin:0 0 36px}
+  .firm-section{margin:0 0 60px}
+  @media (max-width:640px){.firm-section{margin-bottom:40px}}
   .firm-date{white-space:nowrap}
   @media (max-width:640px){.firm-summary>div{grid-template-columns:1fr;gap:2px}}
   .oss-about{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--dk-muted);font-size:var(--dk-fs-s);line-height:1.4}
   /* Subtle source line under each table — carries attribution into shared screenshots. */
-  .oss-attr{margin:10px 0 0;font-size:12px;color:var(--dk-muted)}
+  .oss-attr{margin:12px 0 0;font-size:14px;color:var(--dk-muted)}
   .oss-attr strong{color:var(--dk-ink);font-weight:600}
   /* Uniform row height: every cell reserves the same box and centres its
      content, so 1-line and 2-line descriptions don't make rows jump. */
@@ -600,11 +603,11 @@ for (const role of ROLES) {
       ),
       h1: "Quant Salaries: Live Disclosed Comp",
       intro: `Base-salary figures published in <strong>${disclosed.length}</strong> of the ${jobs.length.toLocaleString()} live postings we track (${Math.round((disclosed.length / jobs.length) * 100)}% disclose comp, mostly NYC-based roles where pay-transparency laws apply). Median across all disclosed postings: <strong>${fmtSal(median(disclosed.map((j) => j.salary)))}</strong>. Excludes bonus and PnL-linked comp, which dominate at senior levels.`,
-      bodyHtml: `<h2 style="font:700 var(--dk-fs-l)/1.3 var(--dk-font);margin:28px 0 10px">By role</h2>
+      bodyHtml: `<h2 style="font:700 var(--dk-fs-l)/1.25 var(--dk-font);margin:40px 0 15px">By role</h2>
 ${kitTable(`<th>Role</th><th class="dk-num">Postings</th><th class="dk-num">Median base</th>`, roleRows)}
-<h2 style="font:700 var(--dk-fs-l)/1.3 var(--dk-font);margin:28px 0 10px">By seniority</h2>
+<h2 style="font:700 var(--dk-fs-l)/1.25 var(--dk-font);margin:40px 0 15px">By seniority</h2>
 ${kitTable(`<th>Seniority</th><th class="dk-num">Postings</th><th class="dk-num">Median base</th>`, senRows)}
-<h2 style="font:700 var(--dk-fs-l)/1.3 var(--dk-font);margin:28px 0 10px">By firm (3+ disclosed postings)</h2>
+<h2 style="font:700 var(--dk-fs-l)/1.25 var(--dk-font);margin:40px 0 15px">By firm (3+ disclosed postings)</h2>
 ${kitTable(
   `<th class="dk-num">#</th><th>Firm</th><th>Type</th><th class="dk-num">Postings</th><th class="dk-num">Median base</th><th class="dk-num">Range</th>`,
   firmRows,
@@ -1132,7 +1135,7 @@ console.log(`firm pages: ${firmPages}`);
 // SPA. Static HTML; the expand/collapse is wired in oss-chart.js (dataset CSP
 // blocks inline JS). Panel links stay in the DOM for crawlers either way.
 const insightsNavItem = (href, label, desc, current) =>
-  `<div style="width:208px"><a href="${href}"${current ? ' aria-current="true"' : ""} style="font:${current ? 700 : 600} 15px/1.3 var(--dk-font);color:#1d70b8;text-underline-offset:2px">${label}</a><p style="margin:4px 0 0;font:400 13px/1.35 var(--dk-font);color:#505a5f">${desc}</p></div>`;
+  `<div style="width:256px"><a href="${href}"${current ? ' aria-current="true"' : ""} style="font:${current ? 700 : 600} 16px/1.3 var(--dk-font);color:#1d70b8;text-underline-offset:2px">${label}</a><p style="margin:4px 0 0;font:400 16px/1.35 var(--dk-font);color:#505a5f">${desc}</p></div>`;
 const insightsNav = (current) => `<nav class="dk-nav" aria-label="Primary">
   <div class="dk-container">
     <ul class="dk-nav-list">
@@ -1144,7 +1147,7 @@ const insightsNav = (current) => `<nav class="dk-nav" aria-label="Primary">
 </nav>
 <div id="insights-panel" hidden style="background:#fff;border-bottom:1px solid #b1b4b6">
   <div class="dk-container insights-panel-inner">
-    <div style="display:flex;flex-wrap:wrap;gap:20px 40px">
+    <div style="display:flex;flex-wrap:wrap;gap:24px 40px">
       ${insightsNavItem(`${PREFIX}/?view=dashboard`, "Hiring insights", "Roles, seniority, salaries and demand across all firms", false)}
       ${insightsNavItem(`${PREFIX}/tech-stack`, "Tech heatmap", "Languages and tools by firm, the hiring heatmap", false)}
       ${insightsNavItem(`${PREFIX}/stacks`, "Tech stack", "Browse each firm's stack as layers, from its own postings", false)}
@@ -1209,7 +1212,7 @@ if (github.firms.length) {
       intro: `Top quant firms with public GitHub orgs, ranked by total stars and activity across repositories.`,
       bodyHtml: `${sortableTable(leaderHead, leaderRows)}
 <p class="oss-attr">Source: <strong>kadoa.com/quant/open-source</strong> · live GitHub data, updated daily</p>
-<h2 style="font:700 var(--dk-fs-l)/1.3 var(--dk-font);margin:32px 0 10px">Top Projects</h2>
+<h2 style="font:700 var(--dk-fs-l)/1.25 var(--dk-font);margin:40px 0 15px">Top Projects</h2>
 ${sortableTable(repoHead, repoRows, "oss-projects")}
 <p class="oss-attr">Source: <strong>kadoa.com/quant/open-source</strong> · live GitHub data, updated daily</p>
 ${emptyOrgs.length ? `<p class="dk-hint" style="margin-top:16px">Orgs with no public repos yet: ${emptyOrgs.map((f) => `<a href="${esc(f.org_url)}" target="_blank" rel="noopener noreferrer">${esc(f.firm_name)}</a>`).join(", ")}.</p>` : ""}
@@ -1372,7 +1375,7 @@ let internshipsSeoSection = null;
       .sort((a, b) => b.salary - a.salary || a.firm.localeCompare(b.firm));
 
     const attr = `<p class="oss-attr">Source: <strong>kadoa.com/quant/internships</strong> · live careers-page ads, updated daily</p>`;
-    const h2 = (t) => `<h2 style="font:700 var(--dk-fs-l)/1.3 var(--dk-font);margin:32px 0 10px">${t}</h2>`;
+    const h2 = (t) => `<h2 style="font:700 var(--dk-fs-l)/1.25 var(--dk-font);margin:40px 0 15px">${t}</h2>`;
     const hint = (t) => `<p class="dk-hint" style="margin:0 0 12px">${t}</p>`;
 
     const firmHead = `${plainTh("#", { num: true, width: "44px" })}${sortTh("Firm", 1, "text")}${sortTh("Internships", 2, "num", { num: true, active: true, dir: "desc", width: "120px" })}${sortTh("Names 2027", 3, "num", { num: true, width: "120px" })}${sortTh("Share of firm's ads", 4, "num", { num: true, width: "160px", cls: "dk-hide-sm" })}`;
@@ -1407,7 +1410,7 @@ let internshipsSeoSection = null;
     // after #root in the built shell, so crawlers and no-JS visitors get the
     // full rankings while the interactive view owns the same URL.
     internshipsSeoSection = `    <section class="dk-container seo-shell" style="padding-top:8px;padding-bottom:8px">
-      <h2 style="font:700 var(--dk-fs-l)/1.3 var(--dk-font);margin:32px 0 10px">Every firm hiring interns</h2>
+      <h2 style="font:700 var(--dk-fs-l)/1.25 var(--dk-font);margin:40px 0 15px">Every firm hiring interns</h2>
       ${hint(`${interns.length} live internship ads across ${internFirms.size} firms. "Names 2027" counts ads with 2027 in the title; share is internships as a percentage of all the firm's live ads.`)}
       ${sortableTable(firmHead, firmRows)}
       ${attr}
@@ -1471,8 +1474,8 @@ const HEAD_CONTENT = {
 const headSectionFor = (shell) => {
   const c = HEAD_CONTENT[shell] ?? HEAD_CONTENT["index.html"];
   return `    <section class="dk-container seo-shell" style="padding-top:28px;padding-bottom:8px">
-      <h1 style="font:700 var(--dk-fs-xxl,1.6rem)/1.15 var(--dk-font,Inter,system-ui,sans-serif);letter-spacing:-0.02em;margin:0 0 10px">${c.h1}</h1>
-      <p style="font:400 var(--dk-fs-l,1.05rem)/1.5 var(--dk-font,Inter,system-ui,sans-serif);color:var(--dk-muted,#666);max-width:70ch;margin:0 0 20px">${c.intro}</p>
+      <h1 style="font:700 var(--dk-fs-xl,2.25rem)/1.12 var(--dk-font,Inter,system-ui,sans-serif);margin:0 0 20px">${c.h1}</h1>
+      <p style="font:400 var(--dk-fs-m,1.1875rem)/1.45 var(--dk-font,Inter,system-ui,sans-serif);color:var(--dk-muted,#666);max-width:640px;margin:0 0 40px">${c.intro}</p>
       ${kitTable(`<th class="dk-num">#</th><th>Firm</th><th>Type</th><th class="dk-num">Open roles</th>`, headRows)}
       <p style="margin-top:16px"><a href="${PREFIX}/hiring">See all ${firms.size} firms ranked by open roles →</a> · <a href="${PREFIX}/salaries">Quant salaries</a></p>
     </section>`;
