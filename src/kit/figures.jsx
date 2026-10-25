@@ -1,8 +1,7 @@
-// Headline figures, section headings and chart cards, reverse engineered from the UKHSA data dashboard, which is
-// built on the GOV.UK Design System. Shared by every dataset site so the patterns stay identical:
+// Headline figures, section headings and chart cards. Shared by every dataset site so the patterns stay identical:
 // - a section heading names the measure and its period, then a short italic line, then the date the data runs to;
 // - headline figures sit in one grey row, a label, a value and a short note per cell, names before percentages;
-// - a change is a GOV.UK tag with an arrow, red for up and green for down unless the caller says otherwise;
+// - a change is a tag with an arrow, red for up and green for down unless the caller says otherwise;
 // - a chart sits in a grey card with Chart, Tabular data and Download tabs.
 import React, { useId, useLayoutEffect, useRef, useState } from "react";
 import "./figures.css";
@@ -28,7 +27,7 @@ export function ChangeTag({ value, unit = "%", size, good = "down", children }) 
   );
 }
 
-// Title, italic description and date, as UKHSA heads every card. `right` holds a link such as "See all".
+// Title, italic description and date at the head of every card. `right` holds a link such as "See all".
 export function SectionHeading({ title, description, date, right, as: H = "h2", id }) {
   return (
     <div className="dk-heading">
@@ -42,9 +41,8 @@ export function SectionHeading({ title, description, date, right, as: H = "h2", 
   );
 }
 
-// One grey row of headline figures under a "Headlines" heading, as every UKHSA topic page opens. Each item is
-// { label, value, note?, title? }. `context` is the short summary UKHSA prints under the panel: what is counted
-// and up to when.
+// One grey row of headline figures under a "Headlines" heading. Each item is { label, value, note?, title? }.
+// `context` is the short summary printed under the panel: what is counted and up to when.
 export function KeyFigures({ title = "Headlines", description, date, right, context, items }) {
   const shown = (items || []).filter(Boolean);
   if (!shown.length) return null;
@@ -65,14 +63,14 @@ export function KeyFigures({ title = "Headlines", description, date, right, cont
   );
 }
 
-// GOV.UK tabs with the design system's keyboard behaviour: arrow keys move between tabs.
+// Tabs with arrow-key navigation: arrow keys move between tabs.
 export function Tabs({ tabs, initial = 0 }) {
   const [active, setActive] = useState(initial);
   const refs = useRef([]);
   const panels = useRef([]);
   const id = useId();
   // Every panel takes the height of the first one (the chart), measured on the page and again on resize, so switching
-  // tabs never moves the content below; a longer table scrolls inside that height, as on the UKHSA dashboard.
+  // tabs never moves the content below; a longer table scrolls inside that height.
   const [lockHeight, setLockHeight] = useState(null);
   useLayoutEffect(() => {
     const measure = () => {
@@ -129,7 +127,7 @@ export function ChartCard({ title, description, date, right, tabs, footer, child
   );
 }
 
-// "Filter data by" and a GOV.UK select, used in place of segmented buttons for a time window.
+// "Filter data by" and a select, used in place of segmented buttons for a time window.
 export function FilterSelect({ label = "Filter data by", value, options, onChange }) {
   const id = useId();
   return (

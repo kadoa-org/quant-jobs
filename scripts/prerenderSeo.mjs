@@ -252,12 +252,14 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script
   .insights-panel-inner{padding-top:25px;padding-bottom:25px}
   .seo-crumbs{font-size:var(--dk-fs-s);color:var(--dk-muted);margin:0 0 20px}
   .seo-crumbs a{color:var(--dk-link)}
-  /* 36px, 27px on a phone: the page-title size shared by every dataset site. */
-  h1{font:700 36px/1.12 var(--dk-font);margin:0 0 20px}
+  /* 36px, 27px on a phone: the page-title size shared by every dataset site. The heading and the lede share the
+     kit's 720px text column; the lede is the kit's lead paragraph, 24px, 21px on phones, in the text colour. */
+  h1{font:700 36px/1.12 var(--dk-font);margin:0 0 20px;max-width:var(--dk-text-column,720px);text-wrap:balance}
   @media (max-width:640px){h1{font-size:27px}}
-  .seo-lede{font:400 var(--dk-fs-m)/1.45 var(--dk-font);color:var(--dk-muted);max-width:640px;margin:0 0 40px}
+  .seo-lede{font:400 24px/30px var(--dk-font);color:var(--dk-ink);max-width:var(--dk-text-column,720px);text-wrap:pretty;margin:0 0 40px}
+  @media (max-width:640px){.seo-lede{font-size:21px;line-height:25px}}
   .seo-lede a,.dk-hint a{color:var(--dk-link)}
-  /* GOV.UK primary button (govuk-frontend .govuk-button): green fill, 2px
+  /* Primary button: green fill, 2px
      bottom shadow, darker hover, yellow focus fill, presses down on :active.
      Previously this was the kit's compact bordered .dk-btn, which kept the
      anchor's blue underlined text inside a white box. */
@@ -278,7 +280,7 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script
   .seo-jd ol{list-style:decimal;padding-left:22px}
   .seo-back{margin-top:40px;font-size:var(--dk-fs-s)}
   .seo-back a{color:var(--dk-link)}
-  /* Firm pages. A GOV.UK summary list without borders, the weekly bars, and dates that never wrap mid-date. */
+  /* Firm pages. A summary list without borders, the weekly bars, and dates that never wrap mid-date. */
   .firm-summary{margin:0 0 40px;font-size:16px;max-width:640px}
   .firm-summary>div{display:grid;grid-template-columns:160px 1fr;gap:15px;padding:8px 0;border-bottom:1px solid var(--dk-rule-soft)}
   .firm-summary dt{font-weight:700;margin:0}
@@ -329,7 +331,7 @@ const DAY_MS = 86400000;
 const buildDay = new Date(`${today}T00:00:00Z`);
 const daysAgo = (iso) => (iso ? Math.floor((buildDay - new Date(`${iso}T00:00:00Z`)) / DAY_MS) : Infinity);
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-// GOV.UK dates: "24 Sep 2026"; the ISO date stays in data-sort so the column still sorts.
+// Dates as "24 Sep 2026"; the ISO date stays in data-sort so the column still sorts.
 const govDate = (iso) => {
   if (!iso) return "";
   const [y, m, d] = iso.split("-").map(Number);
@@ -1090,7 +1092,7 @@ for (const f of ranked) {
       )}${internRows.length > 25 ? `<p class="dk-hint">Showing 25 of ${internRows.length} internships; all are in the table below.</p>` : ""}</section>`
     : "";
 
-  // GOV.UK summary list: the firm at a glance, one fact per row.
+  // Summary list: the firm at a glance, one fact per row.
   const summary = `<dl class="firm-summary">
 <div><dt>Type</dt><dd>${esc(typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1))}</dd></div>
 <div><dt>Hiring in</dt><dd>${cities.map(([c, n]) => `${cityLink(c)} (${n})`).join(", ")}</dd></div>
@@ -1131,7 +1133,7 @@ ${internSection}
 console.log(`firm pages: ${firmPages}`);
 
 // ── insights-page shared helpers (used by /open-source and /internships) ─────
-// gov.uk-style nav for the insights pages: same tabs + Insights toggle as the
+// Nav for the insights pages: same tabs + Insights toggle as the
 // SPA. Static HTML; the expand/collapse is wired in oss-chart.js (dataset CSP
 // blocks inline JS). Panel links stay in the DOM for crawlers either way.
 const insightsNavItem = (href, label, desc, current) =>

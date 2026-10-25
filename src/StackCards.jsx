@@ -84,8 +84,7 @@ const MATRIX_CLUSTERS = {
 
 const LAYER_LABEL = { be: "Languages", data: "Data", ai: "AI & ML", infra: "Infra" };
 const LAYER_ORDER = ["be", "data", "ai", "infra"];
-// GOV.UK Design System tag tints (govuk-tag--yellow/orange/blue/green):
-// tinted background + dark text of the same hue, square corners.
+// Tag tints: tinted background + dark text of the same hue, square corners.
 const LAYER_TAG = {
   be: { bg: "#fcd6c3", fg: "#6e3619", mid: "#c0937c" },
   data: { bg: "#d2e2f1", fg: "#144e81", mid: "#6a95ba" },

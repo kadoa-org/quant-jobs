@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-// GOV.UK dates, "25 Sep 2026", on one line; the ISO date stays in the data and the CSV export.
+// Dates as "25 Sep 2026", on one line; the ISO date stays in the data and the CSV export.
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const govDate = (iso) => {
   if (!iso) return "";

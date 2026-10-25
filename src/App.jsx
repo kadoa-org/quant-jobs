@@ -103,10 +103,10 @@ function syncUrl(view, filters, selectedFirm, search, from, push) {
   }
 }
 
-// Top nav: Firms | Jobs | Insights. The Insights item works like GOV.UK's
-// header Menu: a chevron toggle that expands a full-width panel in normal
-// flow (pushes the page down, no floating popover), holding underlined links
-// with one-line descriptions. Toggle-only close, like gov.uk.
+// Top nav: Firms | Jobs | Insights. The Insights item is a header menu: a
+// chevron toggle that expands a full-width panel in normal flow (pushes the
+// page down, no floating popover), holding underlined links with one-line
+// descriptions. It closes only from the toggle.
 function InsightsNav({ view, setView, onFirms }) {
   const [open, setOpen] = useState(false);
   const insightsActive = ["dashboard", "techstack", "locations", "stacks", "internships"].includes(view);
