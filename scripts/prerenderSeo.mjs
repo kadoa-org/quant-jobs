@@ -252,9 +252,9 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script
   .insights-panel-inner{padding-top:25px;padding-bottom:25px}
   .seo-crumbs{font-size:var(--dk-fs-s);color:var(--dk-muted);margin:0 0 20px}
   .seo-crumbs a{color:var(--dk-link)}
-  /* 36px, 27px on a phone: the page-title size shared by every dataset site. The heading and the lede share the
-     kit's 720px text column; the lede is the kit's lead paragraph, 24px, 21px on phones, in the text colour. */
-  h1{font:700 36px/1.12 var(--dk-font);margin:0 0 20px;max-width:var(--dk-text-column,720px);text-wrap:balance}
+  /* 36px, 27px on a phone: the page-title size shared by every dataset site. The heading uses the full width with
+     balanced lines; the lede sits in the kit's 720px text column and is the kit's lead paragraph, 24px, 21px on phones, in the text colour. */
+  h1{font:700 36px/1.12 var(--dk-font);margin:0 0 20px;text-wrap:balance}
   @media (max-width:640px){h1{font-size:27px}}
   .seo-lede{font:400 24px/30px var(--dk-font);color:var(--dk-ink);max-width:var(--dk-text-column,720px);text-wrap:pretty;margin:0 0 40px}
   @media (max-width:640px){.seo-lede{font-size:21px;line-height:25px}}

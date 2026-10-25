@@ -19,7 +19,7 @@ h3 { font-size: 19px; line-height: 1.3; margin-bottom: 15px; }
 @media (max-width: 640px) { .page { padding-top: 25px; padding-bottom: 40px; } }
 /* A page title with nothing under it keeps the 40px title-to-content gap. */
 .dk-h1.page-title-solo { margin-bottom: 40px; }
-/* Page ledes are the kit's lead paragraph (.dk-lede): 24px, 21px on phones, in the text colour, in the heading's column. */
+/* Page ledes are the kit's lead paragraph (.dk-lede): 24px, 21px on phones, in the text colour, in the 720px text column. */
 .page-lede, .int-lede, .home-lede { font: 400 24px/30px var(--dk-font); color: var(--dk-ink, #0b0c0c); max-width: var(--dk-text-column, 720px); text-wrap: pretty; }
 @media (max-width: 640px) { .page-lede, .int-lede, .home-lede { font-size: 21px; line-height: 25px; } }
 .page-lede { margin: 0 0 40px; }
