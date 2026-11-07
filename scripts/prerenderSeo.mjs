@@ -171,14 +171,13 @@ const siteHeader = `<header class="dk-header">
 // The SPA renders SiteHeader + NavBar above every view. Prerendered pages got
 // the masthead but no nav, so a search visitor landed on a page with no way
 // into the tracker (only /open-source built its own). Static tabs mirroring the
-// app's: Insights is a plain link here rather than the SPA's dropdown, since
-// the dataset CSP blocks inline JS and a crawlable link beats a dead toggle.
+// app's.
 const seoNav = `<nav class="dk-nav" aria-label="Primary">
   <div class="dk-container">
     <ul class="dk-nav-list">
       <li><a href="${PREFIX}/">Jobs</a></li>
       <li><a href="${PREFIX}/?view=firms">Firms</a></li>
-      <li><a href="${PREFIX}/?view=dashboard">Insights</a></li>
+      <li><a href="${PREFIX}/insights">Insights</a></li>
       <li><a href="${PREFIX}/about">About</a></li>
     </ul>
   </div>
@@ -249,7 +248,6 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script
   /* vertical only — must not reset the .dk-container 0 15px side padding */
   .seo-main{padding-top:40px;padding-bottom:60px}
   @media (max-width:640px){.seo-main{padding-top:25px;padding-bottom:40px}}
-  .insights-panel-inner{padding-top:25px;padding-bottom:25px}
   .seo-crumbs{font-size:var(--dk-fs-s);color:var(--dk-muted);margin:0 0 20px}
   .seo-crumbs a{color:var(--dk-link)}
   /* 36px, 27px on a phone: the page-title size shared by every dataset site. The heading uses the full width with
@@ -1132,33 +1130,18 @@ ${internSection}
 }
 console.log(`firm pages: ${firmPages}`);
 
-// ── insights-page shared helpers (used by /open-source and /internships) ─────
-// Nav for the insights pages: same tabs + Insights toggle as the
-// SPA. Static HTML; the expand/collapse is wired in oss-chart.js (dataset CSP
-// blocks inline JS). Panel links stay in the DOM for crawlers either way.
-const insightsNavItem = (href, label, desc, current) =>
-  `<div style="width:256px"><a href="${href}"${current ? ' aria-current="true"' : ""} style="font:${current ? 700 : 600} 16px/1.3 var(--dk-font);color:#1d70b8;text-underline-offset:2px">${label}</a><p style="margin:4px 0 0;font:400 16px/1.35 var(--dk-font);color:#505a5f">${desc}</p></div>`;
-const insightsNav = (current) => `<nav class="dk-nav" aria-label="Primary">
+// ── insights-page nav (used by /open-source and /internships) ────────────────
+// The SPA's tabs, with Insights selected: it links to the /insights overview.
+const insightsNav = () => `<nav class="dk-nav" aria-label="Primary">
   <div class="dk-container">
     <ul class="dk-nav-list">
       <li><a href="${PREFIX}/">Jobs</a></li>
       <li><a href="${PREFIX}/?view=firms">Firms</a></li>
-      <li><a href="#insights" id="insights-toggle" aria-expanded="false" aria-controls="insights-panel">Insights <svg width="11" height="8" viewBox="0 0 11 8" aria-hidden="true" style="display:inline-block;vertical-align:middle;margin-left:2px;margin-top:-2px"><path id="insights-chevron" d="M1 1.5 L5.5 6 L10 1.5" fill="none" stroke="currentColor" stroke-width="2"/></svg></a></li>
+      <li><a href="${PREFIX}/insights" aria-current="true">Insights</a></li>
+      <li><a href="${PREFIX}/about">About</a></li>
     </ul>
   </div>
-</nav>
-<div id="insights-panel" hidden style="background:#fff;border-bottom:1px solid #b1b4b6">
-  <div class="dk-container insights-panel-inner">
-    <div style="display:flex;flex-wrap:wrap;gap:24px 40px">
-      ${insightsNavItem(`${PREFIX}/?view=dashboard`, "Hiring insights", "Roles, seniority, salaries and demand across all firms", false)}
-      ${insightsNavItem(`${PREFIX}/tech-stack`, "Tech heatmap", "Languages and tools by firm, the hiring heatmap", false)}
-      ${insightsNavItem(`${PREFIX}/stacks`, "Tech stack", "Browse each firm's stack as layers, from its own postings", false)}
-      ${insightsNavItem(`${PREFIX}/locations`, "Locations", "Where quant firms hire, city by city", false)}
-      ${insightsNavItem(`${PREFIX}/open-source/`, "Open source", "Firms ranked by GitHub footprint", current === "open-source")}
-      ${insightsNavItem(`${PREFIX}/internships`, "Internships", "Live intern market: firms, skills, cities, pay", current === "internships")}
-    </div>
-  </div>
-</div>`;
+</nav>`;
 
 // ── /open-source — quant firms on GitHub ─────────────────────────────────────
 // SERP gap: "quant firms github" queries return stale listicles; nobody ranks
@@ -1219,34 +1202,20 @@ ${sortableTable(repoHead, repoRows, "oss-projects")}
 <p class="oss-attr">Source: <strong>kadoa.com/quant/open-source</strong> · live GitHub data, updated daily</p>
 ${emptyOrgs.length ? `<p class="dk-hint" style="margin-top:16px">Orgs with no public repos yet: ${emptyOrgs.map((f) => `<a href="${esc(f.org_url)}" target="_blank" rel="noopener noreferrer">${esc(f.firm_name)}</a>`).join(", ")}.</p>` : ""}
 <script src="${PREFIX}/oss-chart.js" defer></script>`,
-      navHtml: insightsNav("open-source"),
+      navHtml: insightsNav(),
       showCrumbs: false,
     }),
   );
   console.log(`open-source page: ${active.length} firms`);
 }
 
-// Same-origin JS file (dataset CSP blocks inline scripts): Insights toggle +
-// click-to-sort on the insights-page tables (/open-source, /internships).
+// Same-origin JS file (dataset CSP blocks inline scripts): click-to-sort on the insights-page tables (/open-source, /internships).
 // Rows are sorted on the raw data-sort value (not the formatted text), and
 // the rank column (data-rank-col) is renumbered to match the visible order.
 {
   fs.writeFileSync(
     path.join(DIST, "oss-chart.js"),
     `(function () {
-  var tgl = document.getElementById("insights-toggle");
-  var panel = document.getElementById("insights-panel");
-  var chev = document.getElementById("insights-chevron");
-  if (tgl && panel) {
-    tgl.addEventListener("click", function (e) {
-      e.preventDefault();
-      var opening = panel.hidden;
-      panel.hidden = !opening;
-      tgl.setAttribute("aria-expanded", String(opening));
-      if (chev) chev.setAttribute("d", opening ? "M1 6.5 L5.5 2 L10 6.5" : "M1 1.5 L5.5 6 L10 1.5");
-    });
-  }
-
   function cellVal(row, col, type) {
     var cell = row.cells[col];
     if (!cell) return type === "num" ? 0 : "";
@@ -1503,6 +1472,7 @@ for (const shell of [
   "locations.html",
   "stacks.html",
   "internships.html",
+  "insights.html",
   "about.html",
 ]) {
   const p = path.join(DIST, shell);

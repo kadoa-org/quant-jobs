@@ -5,6 +5,8 @@ import Dashboard from "./Dashboard";
 import DataTable from "./DataTable";
 import FilterBar, { FIRM_FILTER_KEYS, JOB_FILTER_KEYS } from "./FilterBar";
 import FirmsTable from "./FirmsTable";
+import InsightsPage from "./InsightsPage";
+import { INSIGHT_VIEWS } from "./insights";
 import InternshipsView from "./InternshipsView";
 import { Button, GitHubButton, LiveBadge, NavBar, SiteFooter, SiteHeader } from "./kit";
 import LocationHeatmap from "./LocationHeatmap";
@@ -32,6 +34,7 @@ function viewFromPath(pathname) {
   if (p === `${BASE_PATH}/tech-stack` || p === `${BASE_PATH}/heatmap`) return "techstack";
   if (p === `${BASE_PATH}/locations`) return "locations";
   if (p === `${BASE_PATH}/internships`) return "internships";
+  if (p === `${BASE_PATH}/insights`) return "insights";
   if (p === `${BASE_PATH}/about`) return "about";
   if (p === `${BASE_PATH}/stacks` || p.startsWith(`${BASE_PATH}/stacks/`)) return "stacks";
   // /job/<slug> pages are build-time static files, so in production this
@@ -46,6 +49,7 @@ function pathForView(view) {
   if (view === "techstack") return `${BASE_PATH}/tech-stack`;
   if (view === "locations") return `${BASE_PATH}/locations`;
   if (view === "internships") return `${BASE_PATH}/internships`;
+  if (view === "insights") return `${BASE_PATH}/insights`;
   if (view === "about") return `${BASE_PATH}/about`;
   if (view === "stacks") {
     // StackCards owns sub-routes (/stacks/tech/<slug>, /stacks/firm/<slug>,
@@ -86,7 +90,7 @@ function syncUrl(view, filters, selectedFirm, search, from, push) {
   // Path-routed views carry their own view; do not duplicate as ?view=.
   // "table" is the bare-URL default, so it is omitted too — and "firms" must
   // now be written explicitly or its URL would render the table instead.
-  if (!["table", "techstack", "locations", "internships", "about", "stacks"].includes(view)) params.set("view", view);
+  if (!["table", "techstack", "locations", "internships", "insights", "about", "stacks"].includes(view)) params.set("view", view);
   if (selectedFirm) params.set("firm", selectedFirm);
   for (const [key, values] of Object.entries(filters)) {
     if (values.length > 0) params.set(key, values.join(","));
@@ -103,122 +107,37 @@ function syncUrl(view, filters, selectedFirm, search, from, push) {
   }
 }
 
-// Top nav: Firms | Jobs | Insights. The Insights item is a header menu: a
-// chevron toggle that expands a full-width panel in normal flow (pushes the
-// page down, no floating popover), holding underlined links with one-line
-// descriptions. It closes only from the toggle.
-function InsightsNav({ view, setView, onFirms }) {
-  const [open, setOpen] = useState(false);
-  const insightsActive = ["dashboard", "techstack", "locations", "stacks", "internships"].includes(view);
+// Top nav: Jobs | Firms | Insights | About, as on the other dataset sites. Insights opens the /insights overview and
+// stays selected on every insight view.
+const TAB_PATHS = { table: "", firms: "?view=firms", insights: "insights", about: "about" };
 
-  const go = (k) => {
-    setView(k);
-    setOpen(false);
-    if (k === "firms") onFirms();
-  };
+function TopNav({ view, setView, onFirms }) {
   const tab = (k, label) => (
     <a
-      href={`#${k}`}
-      aria-current={view === k ? "true" : undefined}
+      href={`${import.meta.env.BASE_URL}${TAB_PATHS[k]}`}
+      aria-current={(k === "insights" ? INSIGHT_VIEWS.includes(view) : view === k) ? "true" : undefined}
       onClick={(e) => {
         if (e.metaKey || e.ctrlKey) return;
         e.preventDefault();
-        setOpen(false);
-        go(k);
+        setView(k);
+        if (k === "firms") onFirms();
       }}
     >
       {label}
     </a>
   );
 
-  const ITEMS = [
-    { key: "dashboard", label: "Hiring insights", desc: "Roles, seniority, salaries and demand across all firms" },
-    { key: "techstack", label: "Tech heatmap", desc: "Languages and tools by firm, the hiring heatmap" },
-    { key: "stacks", label: "Tech stack", desc: "Browse each firm\u2019s stack as layers, from its own postings" },
-    { key: "locations", label: "Locations", desc: "Where quant firms hire, city by city" },
-    {
-      key: "open-source",
-      label: "Open source",
-      desc: "Firms ranked by GitHub footprint",
-      href: `${import.meta.env.BASE_URL}open-source/`,
-    },
-    { key: "internships", label: "Internships", desc: "Live intern market: firms, skills, cities, pay" },
-  ];
-
   return (
-    <>
-      <nav className="dk-nav" aria-label="Primary">
-        <div className="dk-container">
-          <ul className="dk-nav-list">
-            <li>{tab("table", "Jobs")}</li>
-            <li>{tab("firms", "Firms")}</li>
-            <li>
-              <a
-                href="#insights"
-                aria-current={insightsActive && !open ? "true" : undefined}
-                aria-expanded={open}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setOpen((v) => !v);
-                }}
-                style={open ? { borderBottomColor: "var(--dk-link)", fontWeight: 600 } : undefined}
-              >
-                Insights{" "}
-                <svg
-                  width="11"
-                  height="8"
-                  viewBox="0 0 11 8"
-                  aria-hidden="true"
-                  style={{ display: "inline-block", verticalAlign: "middle", marginLeft: 2, marginTop: -2 }}
-                >
-                  <path
-                    d={open ? "M1 6.5 L5.5 2 L10 6.5" : "M1 1.5 L5.5 6 L10 1.5"}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                </svg>
-              </a>
-            </li>
-            <li>{tab("about", "About")}</li>
-          </ul>
-        </div>
-      </nav>
-      {open && (
-        <div className="bg-white border-b border-[#b1b4b6]">
-          <div className="dk-container py-6">
-            <div className="flex flex-wrap gap-x-10 gap-y-6">
-              {ITEMS.map((it) =>
-                it.href ? (
-                  <div key={it.key} className="w-64">
-                    <a href={it.href} className="text-[16px] font-semibold text-[#1d70b8] underline underline-offset-2">
-                      {it.label}
-                    </a>
-                    <p className="mt-1 text-[16px] leading-snug text-[#505a5f]">{it.desc}</p>
-                  </div>
-                ) : (
-                  <div key={it.key} className="w-64">
-                    <a
-                      href={`#${it.key}`}
-                      className="text-[16px] font-semibold text-[#1d70b8] underline underline-offset-2"
-                      style={{ fontWeight: view === it.key ? 700 : 600 }}
-                      onClick={(e) => {
-                        if (e.metaKey || e.ctrlKey) return;
-                        e.preventDefault();
-                        go(it.key);
-                      }}
-                    >
-                      {it.label}
-                    </a>
-                    <p className="mt-1 text-[16px] leading-snug text-[#505a5f]">{it.desc}</p>
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <nav className="dk-nav" aria-label="Primary">
+      <div className="dk-container">
+        <ul className="dk-nav-list">
+          <li>{tab("table", "Jobs")}</li>
+          <li>{tab("firms", "Firms")}</li>
+          <li>{tab("insights", "Insights")}</li>
+          <li>{tab("about", "About")}</li>
+        </ul>
+      </div>
+    </nav>
   );
 }
 
@@ -371,7 +290,7 @@ export default function App({ initialPage = null }) {
             </span>
           }
         />
-        <InsightsNav view={view} setView={goView} onFirms={() => setSelectedFirm(null)} />
+        <TopNav view={view} setView={goView} onFirms={() => setSelectedFirm(null)} />
 
         {from === "internships" && view === "table" && (
           <div className="dk-container int-back">
@@ -433,6 +352,7 @@ export default function App({ initialPage = null }) {
               }
             />
           )}
+          {view === "insights" && <InsightsPage onOpen={goView} />}
           {view === "about" && <AboutPage />}
         </main>
       </div>

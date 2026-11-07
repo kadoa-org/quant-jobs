@@ -44,6 +44,7 @@ export default defineConfig({
         stacks: resolve(__dirname, "stacks.html"),
         locations: resolve(__dirname, "locations.html"),
         internships: resolve(__dirname, "internships.html"),
+        insights: resolve(__dirname, "insights.html"),
         about: resolve(__dirname, "about.html"),
       },
     },
