@@ -194,3 +194,30 @@ h3 { font-size: 19px; line-height: 1.3; margin-bottom: 15px; }
 .insight-card-title { font: 700 24px/1.25 var(--dk-font); margin: 0 0 10px; }
 .insight-card-title a { color: var(--dk-link, #1d70b8); text-underline-offset: 2px; }
 .insight-card-text { font: 400 19px/1.4 var(--dk-font); color: var(--dk-ink, #0b0c0c); margin: 0; }
+
+/* Cmd+K / Ctrl+K search (public/search.js), the same dialog as the other dataset sites. */
+.header-kbd { font: 12px ui-monospace, Menlo, monospace; opacity: 0.8; margin-left: 2px; }
+@media (max-width: 640px) { .header-kbd { display: none; } }
+.cmdk { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-start; justify-content: center; padding: 12vh 16px 0; }
+.cmdk[hidden] { display: none; }
+.cmdk-backdrop { position: absolute; inset: 0; background: rgba(11, 12, 12, 0.5); }
+.cmdk-box { position: relative; width: 100%; max-width: 560px; background: #fff; border: 2px solid var(--dk-ink); }
+.cmdk-head { display: flex; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid var(--dk-rule); }
+.cmdk-input { flex: 1; min-width: 0; height: 36px; }
+.cmdk kbd { padding: 1px 6px; border: 1px solid var(--dk-rule); background: var(--dk-bg-hover); font: 13px ui-monospace, Menlo, monospace; color: var(--dk-muted); }
+.cmdk-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.cmdk-list { max-height: 52vh; overflow: auto; padding: 4px 0; }
+.cmdk-group { padding: 8px 12px 4px; font-size: 13px; font-weight: 700; color: var(--dk-muted); }
+.cmdk-item { display: flex; align-items: center; gap: 12px; padding: 7px 12px; color: var(--dk-ink); text-decoration: none; font-size: 15px; }
+.cmdk-item--active { background: var(--dk-bg-hover); }
+.cmdk-label { flex: 1; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmdk-item--active .cmdk-label { color: var(--dk-link); }
+.cmdk-hint { font-size: 13px; color: var(--dk-muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmdk-empty { padding: 24px 12px; text-align: center; color: var(--dk-muted); }
+.cmdk-foot { display: flex; align-items: center; gap: 6px; padding: 0 12px; height: 32px; border-top: 1px solid var(--dk-rule); font-size: 13px; color: var(--dk-muted); }
+@media (max-width: 640px) { .cmdk { padding-top: 16px; } .cmdk-hint { display: none; } .cmdk-foot { display: none; } }
+
+/* Tech heatmap: one heading per heatmap, the AI tools one with a line saying what it counts. */
+.heatmap-h2 { font: 700 var(--dk-fs-l)/1.3 var(--dk-font); color: var(--dk-ink); margin: 0 0 10px; }
+.heatmap-h2--next { margin-top: 60px; }
+.heatmap-note { font: 400 var(--dk-fs-m)/1.45 var(--dk-font); max-width: var(--dk-text-column, 720px); margin: 0 0 20px; }

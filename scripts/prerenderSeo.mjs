@@ -30,6 +30,7 @@ import initSqlJs from "sql.js";
 import { QUANT_ROLES as BOARD_ROLES, ROLE_LABELS, SENIORITY_LABELS, SENIORITY_ORDER } from "../src/constants.js";
 import { rankSkillAreas } from "../src/skillAreas.js";
 // The generated page lists, shared with the app so its "Explore the data" links and the pages stay in step.
+import { INSIGHTS } from "../src/insights.js";
 import { LOCATIONS, ROLES, TECHS } from "../src/seoPages.js";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -163,6 +164,7 @@ const siteHeader = `<header class="dk-header">
     </span>
     <span style="display:flex;align-items:center;gap:14px">
       <span class="dk-live"><span class="dk-live-dot" aria-hidden="true"></span>Updated daily</span>
+      <button type="button" class="dk-btn dk-btn--inverse" data-search-open aria-label="Search (Cmd+K)">Search <kbd class="header-kbd">⌘K</kbd></button>
       <a class="dk-btn dk-btn--inverse" href="https://github.com/kadoa-org/quant-jobs" target="_blank" rel="noopener noreferrer" aria-label="Star on GitHub" style="text-decoration:none">${GH_ICON}<span class="dk-btn-label">Star on GitHub</span></a>
     </span>
   </div>
@@ -241,6 +243,7 @@ function page({ pathname, title, description, jsonLd, h1, intro, bodyHtml, navHt
 <meta name="twitter:description" content="${esc(description)}" />
 <meta name="twitter:image" content="${BASE}/screenshot.png" />
 ${cssHref ? `<link rel="stylesheet" href="${cssHref}" />` : ""}
+<script src="${PREFIX}/search.js" defer></script>
 ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : ""}
 <style>
   /* Page-only styles; the look comes from the kit's .dk-* classes in the bundle CSS. */
@@ -349,11 +352,25 @@ const datasetLd = (name, desc, url) => ({
 });
 
 const written = [];
+// Each written page's <h1> as plain text, for the search index.
+const headings = new Map();
+const plainText = (html) =>
+  html
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&#x27;|&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim();
 function write(pathname, html) {
   const dir = path.join(DIST, pathname.slice(1));
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, "index.html"), html);
   written.push(pathname);
+  const h1 = /<h1[^>]*>([\s\S]*?)<\/h1>/.exec(html);
+  if (h1) headings.set(pathname, plainText(h1[1]));
 }
 
 // ── /hiring ──────────────────────────────────────────────────────────────────
@@ -1431,7 +1448,7 @@ const HEAD_CONTENT = {
   },
   "tech-stack.html": {
     h1: `Quant Tech Heatmap: Languages &amp; Tools Across ${firmsWithLang} Firms`,
-    intro: `Which programming languages, frameworks, and accelerators quant firms hire for — across ${firmsWithLang} buy-side firms and ${jobsStr} open roles. Explore the interactive heatmap above; the firms with the most open roles are listed below.`,
+    intro: `Which programming languages, hardware and AI tools quant firms hire for, across ${firmsWithLang} buy-side firms and ${jobsStr} open roles. Explore the interactive heatmap above; the firms with the most open roles are listed below.`,
   },
   "stacks.html": {
     h1: `Quant Tech Stack by Firm: Every Firm&#x27;s Stack, Layer by Layer`,
@@ -1622,6 +1639,51 @@ for (const f of stacksData.firms) {
 }
 for (const [route, title] of SPA_ROUTES) write(route, spaShell(route, title));
 console.log(`stacks SPA shells: ${SPA_ROUTES.length}`);
+
+// ── search.json — the index behind Cmd+K / Ctrl+K (public/search.js) ──────────
+//
+// One entry per page a visitor might look for: the app's views, every firm, role, city and technology page, and
+// every job page, each with the figure that identifies it.
+{
+  const openRoles = (pred) => {
+    const n = jobs.filter(pred).length;
+    return `${n.toLocaleString()} open role${n === 1 ? "" : "s"}`;
+  };
+  const tagged = (j, name) => (j.programmingLanguages || []).includes(name) || (j.technologies || []).includes(name);
+  const named = new Map([
+    ...ROLES.map((r) => [`/${r.slug}`, ["Roles", r.name, openRoles((j) => j.roleCategory === r.key)]]),
+    ...LOCATIONS.map((l) => [`/location/${l.slug}`, ["Cities", l.name, openRoles((j) => (j.locations || []).includes(l.name))]]),
+    ...TECHS.map((t) => [`/tech/${t.slug}`, ["Technologies", t.name, openRoles((j) => tagged(j, t.name))]]),
+    ...[...stackTechFirms].map(([t, carriers]) => [
+      `/stacks/tech/${slugStackTech(t)}`,
+      ["Technologies", t, `in ${carriers.length} firm${carriers.length === 1 ? "" : "s"}' stacks`],
+    ]),
+    ...[...firms.values()].map((f) => [`/firm/${f.slug}`, ["Firms", f.name, `${f.count} open roles`]]),
+  ]);
+  const entry = (group, label, href, hint = "") => ({ group, label, hint, href });
+  const index = [
+    entry("Pages", "Quant jobs board", `${PREFIX}/`, `${boardStr} open roles`),
+    entry("Pages", "Firms", `${PREFIX}/?view=firms`, `${firms.size} firms`),
+    entry("Pages", "Insights", `${PREFIX}/insights`),
+    entry("Pages", "About the data", `${PREFIX}/about`),
+    ...INSIGHTS.map((i) => entry("Pages", i.title, `${PREFIX}/${i.path}`, i.summary)),
+  ];
+  const writtenSet = new Set(written);
+  for (const p of written) {
+    if (p.startsWith("/job/")) continue;
+    if (named.has(p)) index.push(entry(named.get(p)[0], named.get(p)[1], PREFIX + p, named.get(p)[2]));
+    else if (!p.startsWith("/stacks/") && headings.has(p)) index.push(entry("Pages", headings.get(p), PREFIX + p));
+  }
+  for (const j of jobs) {
+    if (!j.slug || !writtenSet.has(`/job/${j.slug}`)) continue;
+    index.push(entry("Jobs", j.jobTitle, `${PREFIX}/job/${j.slug}`, [j.firmName, (j.locations || [])[0]].filter(Boolean).join(" · ")));
+  }
+  // One entry per page: the open-source page is both an insight card and a written page.
+  const seen = new Set();
+  const unique = index.filter((e) => !seen.has(e.href.replace(/\/$/, "")) && seen.add(e.href.replace(/\/$/, "")));
+  fs.writeFileSync(path.join(DIST, "data", "search.json"), JSON.stringify(unique));
+  console.log(`search.json: ${unique.length} entries`);
+}
 
 // ── sitemaps ──────────────────────────────────────────────────────────────────
 //

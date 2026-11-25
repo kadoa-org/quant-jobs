@@ -286,6 +286,9 @@ export default function App({ initialPage = null }) {
           right={
             <span style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <LiveBadge>Updated daily</LiveBadge>
+              <Button inverse data-search-open aria-label="Search (Cmd+K)">
+                Search <kbd className="header-kbd">⌘K</kbd>
+              </Button>
               <GitHubButton repo="kadoa-org/quant-jobs" />
             </span>
           }

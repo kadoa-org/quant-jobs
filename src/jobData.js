@@ -21,6 +21,7 @@ export function readJobData(db) {
       skills: r.skills ? JSON.parse(r.skills) : [],
       assetClasses: r.asset_classes ? JSON.parse(r.asset_classes) : [],
       workMode: r.work_mode,
+      aiTools: r.ai_tools ? JSON.parse(r.ai_tools) : [],
     }));
 
     const rawFirms = dbQuery(db, "SELECT * FROM firms").map((r) => ({
