@@ -111,24 +111,21 @@ function escapeText(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-const GROUPS = [
-  { label: null, cols: TECHS },
-  { label: "AI tools", cols: AI },
-];
+// The AI tools sit to the right of the languages, after a gap.
+const GROUPS = [TECHS, AI];
 
-// The heatmap: a row per firm, a column per language, hardware and AI tool, the AI tools as their own group to the
-// right. Cell colour is the count, sqrt-scaled within each group: AI tools are asked for far less often than Python, so
+// The heatmap: a row per firm, a column per language, hardware and AI tool. Cell colour is the count, sqrt-scaled within each group: AI tools are asked for far less often than Python, so
 // on one shared scale every AI cell would be pale.
 function buildSvg(firms) {
   const rowsData = firms.filter((f) => COLS.some((c) => f.counts[c] > 0));
-  const groupMax = GROUPS.map((g) => Math.max(0, ...rowsData.flatMap((f) => g.cols.map((c) => f.counts[c]))));
+  const groupMax = GROUPS.map((g) => Math.max(0, ...rowsData.flatMap((f) => g.map((c) => f.counts[c]))));
 
   const firmW = 150;
   const nW = 30;
   const cellW = 52;
   const groupGap = 18;
   const left = 8;
-  const top = 56;
+  const top = 36;
   const rowH = 22;
   const cellPad = 2;
   const nColX = left + firmW;
@@ -137,7 +134,7 @@ function buildSvg(firms) {
   let x = plotStartX;
   GROUPS.forEach((g, gi) => {
     if (gi) x += groupGap;
-    for (const c of g.cols) {
+    for (const c of g) {
       cols.push({ name: c, x, group: gi });
       x += cellW;
     }
@@ -148,16 +145,7 @@ function buildSvg(firms) {
   const height = totalH + 16;
   const headerBaselineY = top - 8;
   const ruleY = top - 3;
-  const groupBaselineY = top - 30;
 
-  // Only the AI tools carry a group label; the languages need none.
-  const groupHeaders = GROUPS.map((g, gi) => {
-    if (!g.label) return "";
-    const gc = cols.filter((c) => c.group === gi);
-    const x1 = gc[0].x + cellPad;
-    const x2 = gc[gc.length - 1].x + cellW - cellPad;
-    return `<text x="${x1}" y="${groupBaselineY}" font-size="12.5" font-weight="700" fill="#1a1a1a">${escapeText(g.label)}</text><line x1="${x1}" y1="${groupBaselineY + 7}" x2="${x2}" y2="${groupBaselineY + 7}" stroke="#1a1a1a" stroke-width="1"/>`;
-  }).join("");
   const colHeaders = cols
     .map((c) => `<text x="${c.x + cellW / 2}" y="${headerBaselineY}" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1a1a1a">${escapeText(TECH_DISPLAY[c.name] || c.name)}</text>`)
     .join("");
@@ -189,7 +177,7 @@ function buildSvg(firms) {
   const bottomRule = `<line x1="${left}" y1="${totalH + 2}" x2="${plotEndX}" y2="${totalH + 2}" stroke="rgba(0,0,0,0.12)" stroke-width="1"/>`;
 
   return {
-    svg: `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><g>${groupHeaders}</g><g>${colHeaders}</g>${nHeader}${topRule}<g>${rows}</g>${bottomRule}</svg>`,
+    svg: `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><g>${colHeaders}</g>${nHeader}${topRule}<g>${rows}</g>${bottomRule}</svg>`,
     width,
   };
 }
