@@ -111,31 +111,53 @@ function escapeText(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-// One heatmap: a row per firm that names at least one of `cols`, a cell per column. Cell colour is the count,
-// sqrt-scaled across this heatmap only, so the AI tools (asked for far less often than Python) get their own scale.
-function buildSvg(firms, cols) {
-  const rowsData = firms.filter((f) => cols.some((c) => f.counts[c] > 0));
-  let max = 0;
-  for (const f of rowsData) for (const c of cols) max = Math.max(max, f.counts[c]);
+const GROUPS = [
+  { label: "Languages and hardware", cols: TECHS },
+  { label: "AI tools", cols: AI },
+];
 
-  const firmW = 160;
+// The heatmap: a row per firm, a column per language, hardware and AI tool, the AI tools as their own group to the
+// right. Cell colour is the count, sqrt-scaled within each group: AI tools are asked for far less often than Python, so
+// on one shared scale every AI cell would be pale.
+function buildSvg(firms) {
+  const rowsData = firms.filter((f) => COLS.some((c) => f.counts[c] > 0));
+  const groupMax = GROUPS.map((g) => Math.max(0, ...rowsData.flatMap((f) => g.cols.map((c) => f.counts[c]))));
+
+  const firmW = 150;
   const nW = 30;
-  const cellW = 62;
-  const left = 24;
-  const top = 36;
+  const cellW = 52;
+  const groupGap = 18;
+  const left = 8;
+  const top = 56;
   const rowH = 22;
   const cellPad = 2;
   const nColX = left + firmW;
   const plotStartX = nColX + nW;
-  const plotEndX = plotStartX + cols.length * cellW;
-  const width = plotEndX + 8;
+  const cols = [];
+  let x = plotStartX;
+  GROUPS.forEach((g, gi) => {
+    if (gi) x += groupGap;
+    for (const c of g.cols) {
+      cols.push({ name: c, x, group: gi });
+      x += cellW;
+    }
+  });
+  const plotEndX = x;
+  const width = plotEndX + 4;
   const totalH = top + rowsData.length * rowH;
   const height = totalH + 16;
   const headerBaselineY = top - 8;
   const ruleY = top - 3;
+  const groupBaselineY = top - 30;
 
+  const groupHeaders = GROUPS.map((g, gi) => {
+    const gc = cols.filter((c) => c.group === gi);
+    const x1 = gc[0].x + cellPad;
+    const x2 = gc[gc.length - 1].x + cellW - cellPad;
+    return `<text x="${x1}" y="${groupBaselineY}" font-size="12.5" font-weight="700" fill="#1a1a1a">${escapeText(g.label)}</text><line x1="${x1}" y1="${groupBaselineY + 7}" x2="${x2}" y2="${groupBaselineY + 7}" stroke="#1a1a1a" stroke-width="1"/>`;
+  }).join("");
   const colHeaders = cols
-    .map((c, i) => `<text x="${plotStartX + i * cellW + cellW / 2}" y="${headerBaselineY}" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1a1a1a">${escapeText(TECH_DISPLAY[c] || c)}</text>`)
+    .map((c) => `<text x="${c.x + cellW / 2}" y="${headerBaselineY}" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1a1a1a">${escapeText(TECH_DISPLAY[c.name] || c.name)}</text>`)
     .join("");
   const nHeader = `<text x="${nColX + nW - 4}" y="${headerBaselineY}" text-anchor="end" font-size="11.5" font-weight="600" fill="#1a1a1a">n</text>`;
   const topRule = `<line x1="${nColX}" y1="${ruleY}" x2="${plotEndX}" y2="${ruleY}" stroke="rgba(0,0,0,0.2)" stroke-width="1"/>`;
@@ -146,16 +168,15 @@ function buildSvg(firms, cols) {
       const firmName = `<text x="${nColX - 8}" y="${y + rowH / 2 + 4}" text-anchor="end" font-size="14" fill="#1a1a1a" font-weight="500">${escapeText(shortenFirm(f.firm))}</text>`;
       const nText = `<text x="${nColX + nW - 4}" y="${y + rowH / 2 + 4}" text-anchor="end" font-size="11" fill="#6b6b6b" font-weight="500" font-variant-numeric="tabular-nums">${f.total}</text>`;
       const cells = cols
-        .map((c, j) => {
-          const x = plotStartX + j * cellW;
-          const count = f.counts[c];
-          const t = countToHeatT(count, max);
+        .map((c) => {
+          const count = f.counts[c.name];
+          const t = countToHeatT(count, groupMax[c.group]);
           const fill = count > 0 ? heatColor(t) : "#f4f4f3";
-          const what = c === "AI tools" ? "ask for AI tools" : `name ${c}`;
-          const rect = `<rect x="${x + cellPad}" y="${y + cellPad}" width="${cellW - cellPad * 2}" height="${rowH - cellPad * 2}" rx="2" fill="${fill}" stroke="#ffffff" stroke-width="1"><title>${escapeText(`${f.firm}: ${count} of ${f.total} postings ${what}`)}</title></rect>`;
+          const what = c.name === "AI tools" ? "ask for AI tools" : `name ${c.name}`;
+          const rect = `<rect x="${c.x + cellPad}" y="${y + cellPad}" width="${cellW - cellPad * 2}" height="${rowH - cellPad * 2}" rx="2" fill="${fill}" stroke="#ffffff" stroke-width="1"><title>${escapeText(`${f.firm}: ${count} of ${f.total} postings ${what}`)}</title></rect>`;
           const label =
             count > 0
-              ? `<text x="${x + cellW / 2}" y="${y + rowH / 2 + 4}" text-anchor="middle" font-size="10.5" fill="${t >= 0.55 ? "#ffffff" : "#1a1a1a"}" font-weight="500" font-variant-numeric="tabular-nums" pointer-events="none">${count}</text>`
+              ? `<text x="${c.x + cellW / 2}" y="${y + rowH / 2 + 4}" text-anchor="middle" font-size="10.5" fill="${t >= 0.55 ? "#ffffff" : "#1a1a1a"}" font-weight="500" font-variant-numeric="tabular-nums" pointer-events="none">${count}</text>`
               : "";
           return rect + label;
         })
@@ -166,31 +187,16 @@ function buildSvg(firms, cols) {
   const bottomRule = `<line x1="${left}" y1="${totalH + 2}" x2="${plotEndX}" y2="${totalH + 2}" stroke="rgba(0,0,0,0.12)" stroke-width="1"/>`;
 
   return {
-    svg: `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><g>${colHeaders}</g>${nHeader}${topRule}<g>${rows}</g>${bottomRule}</svg>`,
+    svg: `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><g>${groupHeaders}</g><g>${colHeaders}</g>${nHeader}${topRule}<g>${rows}</g>${bottomRule}</svg>`,
     width,
-    firms: rowsData.length,
   };
 }
 
-function Heatmap({ chart }) {
-  return (
-    <div className="overflow-x-auto -mx-[15px] sm:mx-0">
-      <div
-        className="px-[15px] sm:px-0"
-        style={{ minWidth: chart.width }}
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: SVG generated locally from trusted aggregation
-        dangerouslySetInnerHTML={{ __html: chart.svg }}
-      />
-    </div>
-  );
-}
-
 export default function TechStackHeatmap({ jobs }) {
-  const { langs, ai, numFirms, aiPostings, postings } = useMemo(() => {
+  const { chart, numFirms, aiPostings, postings } = useMemo(() => {
     const firms = aggregate(jobs || []);
     return {
-      langs: buildSvg(firms, TECHS),
-      ai: buildSvg(firms, AI),
+      chart: buildSvg(firms),
       numFirms: firms.length,
       postings: firms.reduce((n, f) => n + f.total, 0),
       aiPostings: firms.reduce((n, f) => n + f.counts["AI tools"], 0),
@@ -204,14 +210,18 @@ export default function TechStackHeatmap({ jobs }) {
         <p className="page-lede">
           How many open postings at {numFirms} hedge funds and prop trading firms name each language, hardware and AI tool.
         </p>
-        <h2 className="heatmap-h2">Languages and hardware</h2>
-        <Heatmap chart={langs} />
-        <h2 className="heatmap-h2 heatmap-h2--next">AI tools</h2>
         <p className="heatmap-note">
           {aiPostings.toLocaleString()} of {postings.toLocaleString()} postings ask candidates to use AI tools. Any AI
-          counts them all, named or not. ChatGPT includes OpenAI&apos;s Codex.
+          counts them all, named or not; ChatGPT includes OpenAI&apos;s Codex. AI tools are coloured on their own scale.
         </p>
-        <Heatmap chart={ai} />
+        {/* Wider than the text column, up to the window, so all columns fit on a laptop; narrower screens scroll. */}
+        <div className="heatmap-bleed" style={{ width: `min(calc(100vw - 32px), ${chart.width}px)` }}>
+          <div
+            style={{ minWidth: chart.width }}
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: SVG generated locally from trusted aggregation
+            dangerouslySetInnerHTML={{ __html: chart.svg }}
+          />
+        </div>
         <div className="page-credit">
           <strong>kadoa.com/quant</strong>
           <span aria-hidden="true">·</span>
