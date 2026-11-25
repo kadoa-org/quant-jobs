@@ -112,7 +112,7 @@ function escapeText(s) {
 }
 
 const GROUPS = [
-  { label: "Languages and hardware", cols: TECHS },
+  { label: null, cols: TECHS },
   { label: "AI tools", cols: AI },
 ];
 
@@ -150,7 +150,9 @@ function buildSvg(firms) {
   const ruleY = top - 3;
   const groupBaselineY = top - 30;
 
+  // Only the AI tools carry a group label; the languages need none.
   const groupHeaders = GROUPS.map((g, gi) => {
+    if (!g.label) return "";
     const gc = cols.filter((c) => c.group === gi);
     const x1 = gc[0].x + cellPad;
     const x2 = gc[gc.length - 1].x + cellW - cellPad;
