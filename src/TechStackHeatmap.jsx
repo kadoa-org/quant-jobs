@@ -21,12 +21,7 @@ const TECHS = [
   "CUDA",
 ];
 
-// AI tools the postings ask candidates to use (the exporter's aiTools tags). "AI tools" counts every such posting,
-// whether or not it names one; ChatGPT includes OpenAI's Codex.
-const AI = ["AI tools", "Claude", "Copilot", "ChatGPT", "Cursor"];
-const COLS = [...TECHS, ...AI];
-
-const TECH_DISPLAY = { JavaScript: "JS", TypeScript: "TS", "AI tools": "Any AI" };
+const TECH_DISPLAY = { JavaScript: "JS", TypeScript: "TS" };
 
 const HEAT_PALETTE = [
   "#ffffcc",
@@ -89,15 +84,12 @@ function aggregate(jobs) {
     if (!j.firmName) continue;
     let r = m.get(j.firmName);
     if (!r) {
-      r = { total: 0, type: j.firmType || "other", counts: Object.fromEntries(COLS.map((t) => [t, 0])) };
+      r = { total: 0, type: j.firmType || "other", counts: Object.fromEntries(TECHS.map((t) => [t, 0])) };
       m.set(j.firmName, r);
     }
     r.total++;
-    // AI columns count only the aiTools tags: the extracted technologies also name Claude or Copilot now and then, and
-    // mixing the two would leave a firm with a Claude posting but none in Any AI.
     const tags = new Set([...(j.programmingLanguages || []), ...(j.technologies || [])]);
     for (const t of TECHS) if (tags.has(t)) r.counts[t]++;
-    for (const t of j.aiTools || []) if (t in r.counts) r.counts[t]++;
   }
   // Plain by-volume ordering; the firm-type classification was noisy and sometimes wrong, so it no longer drives
   // grouping or colour.
@@ -111,35 +103,23 @@ function escapeText(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-// The AI tools sit to the right of the languages, after a gap.
-const GROUPS = [TECHS, AI];
-
-// The heatmap: a row per firm, a column per language, hardware and AI tool. Cell colour is the count, sqrt-scaled within each group: AI tools are asked for far less often than Python, so
-// on one shared scale every AI cell would be pale.
+// The heatmap: a row per firm, a column per language and hardware. Cell colour is the count, sqrt-scaled. AI tools have
+// their own page (/ai-tools).
 function buildSvg(firms) {
-  const rowsData = firms.filter((f) => COLS.some((c) => f.counts[c] > 0));
-  const groupMax = GROUPS.map((g) => Math.max(0, ...rowsData.flatMap((f) => g.map((c) => f.counts[c]))));
+  const rowsData = firms.filter((f) => TECHS.some((c) => f.counts[c] > 0));
+  const globalMax = Math.max(0, ...rowsData.flatMap((f) => TECHS.map((c) => f.counts[c])));
 
   const firmW = 150;
   const nW = 30;
   const cellW = 52;
-  const groupGap = 18;
   const left = 8;
   const top = 36;
   const rowH = 22;
   const cellPad = 2;
   const nColX = left + firmW;
   const plotStartX = nColX + nW;
-  const cols = [];
-  let x = plotStartX;
-  GROUPS.forEach((g, gi) => {
-    if (gi) x += groupGap;
-    for (const c of g) {
-      cols.push({ name: c, x, group: gi });
-      x += cellW;
-    }
-  });
-  const plotEndX = x;
+  const cols = TECHS.map((name, i) => ({ name, x: plotStartX + i * cellW }));
+  const plotEndX = plotStartX + TECHS.length * cellW;
   const width = plotEndX + 4;
   const totalH = top + rowsData.length * rowH;
   const height = totalH + 16;
@@ -160,10 +140,9 @@ function buildSvg(firms) {
       const cells = cols
         .map((c) => {
           const count = f.counts[c.name];
-          const t = countToHeatT(count, groupMax[c.group]);
+          const t = countToHeatT(count, globalMax);
           const fill = count > 0 ? heatColor(t) : "#f4f4f3";
-          const what = c.name === "AI tools" ? "ask for AI tools" : `name ${c.name}`;
-          const rect = `<rect x="${c.x + cellPad}" y="${y + cellPad}" width="${cellW - cellPad * 2}" height="${rowH - cellPad * 2}" rx="2" fill="${fill}" stroke="#ffffff" stroke-width="1"><title>${escapeText(`${f.firm}: ${count} of ${f.total} postings ${what}`)}</title></rect>`;
+          const rect = `<rect x="${c.x + cellPad}" y="${y + cellPad}" width="${cellW - cellPad * 2}" height="${rowH - cellPad * 2}" rx="2" fill="${fill}" stroke="#ffffff" stroke-width="1"><title>${escapeText(`${f.firm}: ${count} of ${f.total} postings name ${c.name}`)}</title></rect>`;
           const label =
             count > 0
               ? `<text x="${c.x + cellW / 2}" y="${y + rowH / 2 + 4}" text-anchor="middle" font-size="10.5" fill="${t >= 0.55 ? "#ffffff" : "#1a1a1a"}" font-weight="500" font-variant-numeric="tabular-nums" pointer-events="none">${count}</text>`
@@ -183,14 +162,9 @@ function buildSvg(firms) {
 }
 
 export default function TechStackHeatmap({ jobs }) {
-  const { chart, numFirms, aiPostings, postings } = useMemo(() => {
+  const { chart, numFirms } = useMemo(() => {
     const firms = aggregate(jobs || []);
-    return {
-      chart: buildSvg(firms),
-      numFirms: firms.length,
-      postings: firms.reduce((n, f) => n + f.total, 0),
-      aiPostings: firms.reduce((n, f) => n + f.counts["AI tools"], 0),
-    };
+    return { chart: buildSvg(firms), numFirms: firms.length };
   }, [jobs]);
 
   return (
@@ -198,11 +172,7 @@ export default function TechStackHeatmap({ jobs }) {
       <div className="dk-container page">
         <h1 className="dk-h1">Quant tech heatmap</h1>
         <p className="page-lede">
-          How many open postings at {numFirms} hedge funds and prop trading firms name each language, hardware and AI tool.
-        </p>
-        <p className="heatmap-note">
-          {aiPostings.toLocaleString()} of {postings.toLocaleString()} postings ask candidates to use AI tools. Any AI
-          counts them all, named or not; ChatGPT includes OpenAI&apos;s Codex. AI tools are coloured on their own scale.
+          How many open postings at {numFirms} hedge funds and prop trading firms name each language and hardware.
         </p>
         {/* Wider than the text column, up to the window, so all columns fit on a laptop; narrower screens scroll. */}
         <div className="heatmap-bleed" style={{ width: `min(calc(100vw - 32px), ${chart.width}px)` }}>

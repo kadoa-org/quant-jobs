@@ -1608,7 +1608,7 @@ const HEAD_CONTENT = {
   },
   "tech-stack.html": {
     h1: `Quant Tech Heatmap: Languages &amp; Tools Across ${firmsWithLang} Firms`,
-    intro: `Which programming languages, hardware and AI tools quant firms hire for, across ${firmsWithLang} buy-side firms and ${jobsStr} open roles. Explore the interactive heatmap above; the firms with the most open roles are listed below.`,
+    intro: `Which programming languages and hardware quant firms hire for, across ${firmsWithLang} buy-side firms and ${jobsStr} open roles. Explore the interactive heatmap above; the firms with the most open roles are listed below.`,
   },
   "stacks.html": {
     h1: `Quant Tech Stack by Firm: Every Firm&#x27;s Stack, Layer by Layer`,
