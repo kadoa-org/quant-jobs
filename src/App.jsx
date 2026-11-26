@@ -10,6 +10,7 @@ import { INSIGHT_VIEWS } from "./insights";
 import InternshipsView from "./InternshipsView";
 import { Button, GitHubButton, LiveBadge, NavBar, SiteFooter, SiteHeader } from "./kit";
 import LocationHeatmap from "./LocationHeatmap";
+import PlaceAutocomplete from "./PlaceAutocomplete";
 import PrerenderShell from "./PrerenderShell";
 import StackCards from "./StackCards";
 import { matchesAnySkillArea } from "./skillAreas";
@@ -371,21 +372,14 @@ export default function App({ initialPage = null }) {
               <div className="job-search__field">
                 <label htmlFor="job-where" className="job-search__label">Where</label>
                 <span className="job-search__hint" id="job-where-hint">City, country or "remote"</span>
-                <input
+                <PlaceAutocomplete
                   id="job-where"
-                  type="search"
-                  list="job-places"
-                  aria-describedby="job-where-hint"
+                  describedBy="job-where-hint"
                   className="job-search__input"
                   value={where}
-                  onChange={(e) => setWhere(e.target.value)}
-                  autoComplete="off"
+                  onChange={setWhere}
+                  options={placeOptions}
                 />
-                <datalist id="job-places">
-                  {placeOptions.map((l) => (
-                    <option key={l} value={l} />
-                  ))}
-                </datalist>
               </div>
             </form>
             {filterBar(JOB_FILTER_KEYS, true)}

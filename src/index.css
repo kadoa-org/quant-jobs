@@ -188,12 +188,18 @@ h3 { font-size: 19px; line-height: 1.3; margin-bottom: 15px; }
 @media (max-width: 640px) { .dash-filters .filter-bar { padding-bottom: 25px; } }
 
 /* Jobs page (App.jsx, DataTable.jsx). Search first, then filters, then the list: cards on a phone, a table from 768px. */
-.job-search { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; margin: 0 0 25px; max-width: 960px; }
+.job-search { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; margin: 0 0 25px; max-width: 960px; position: relative; z-index: 101; }
+/* Above the filter bar (z-index 100), whose own menus open downward over the table, so the Where suggestions cover it. */
 @media (max-width: 640px) { .job-search { grid-template-columns: minmax(0, 1fr); gap: 15px; } }
 .job-search__field { display: flex; flex-direction: column; }
 .job-search__label { font: 700 19px/1.3 var(--dk-font); color: var(--dk-ink); }
 .job-search__hint { font-size: 16px; color: var(--dk-muted); margin: 2px 0 6px; }
 .job-search__input { height: 44px; padding: 0 10px; border: 2px solid var(--dk-ink); border-radius: 0; font: 400 19px var(--dk-font); color: var(--dk-ink); background: #fff; width: 100%; }
+.place-ac { position: relative; }
+.place-ac__list { position: absolute; top: 100%; left: 0; right: 0; z-index: 20; margin: 0; padding: 0; list-style: none; background: #fff; border: 2px solid var(--dk-ink); border-top: 0; max-height: 320px; overflow-y: auto; }
+.place-ac__option { padding: 8px 10px; font: 400 19px/1.3 var(--dk-font); color: var(--dk-ink); cursor: pointer; }
+.place-ac__option + .place-ac__option { border-top: 1px solid var(--dk-rule-soft, #f3f2f1); }
+.place-ac__option--active { background: var(--dk-link, #1d70b8); color: #fff; }
 .job-search__input:focus { outline: 3px solid var(--dk-focus); outline-offset: 0; box-shadow: inset 0 0 0 2px var(--dk-ink); }
 
 .filter-toggle { display: none; }
