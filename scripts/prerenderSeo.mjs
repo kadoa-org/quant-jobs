@@ -248,14 +248,13 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script
 <style>
   /* Page-only styles; the look comes from the kit's .dk-* classes in the bundle CSS. */
   body{margin:0;background:#fff;color:var(--dk-ink);font:19px/1.4 var(--dk-font)}
-  .ai-h2{font:700 var(--dk-fs-l)/1.25 var(--dk-font);margin:44px 0 12px}
-  .ai-hint{margin:0 0 14px}
   .ai-chart{display:block;max-width:720px;height:auto}
   .ai-narrow{display:none}
   @media (max-width:560px){.ai-wide{display:none}.ai-narrow{display:block}}
   .ai-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0 0 6px;font-size:var(--dk-fs-s);color:var(--dk-muted)}
   .ai-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:baseline}
-  .ai-method{margin-top:36px;max-width:var(--dk-text-column,720px)}
+  .ai-legend{margin-bottom:12px}
+  .ai-about{max-width:640px;margin:20px 0 0}.ai-about ul{list-style:disc;padding-left:20px;margin:0;display:grid;gap:12px;font-size:17px}
   /* vertical only — must not reset the .dk-container 0 15px side padding */
   .seo-main{padding-top:40px;padding-bottom:60px}
   @media (max-width:640px){.seo-main{padding-top:25px;padding-bottom:40px}}
@@ -1328,30 +1327,28 @@ ${emptyOrgs.length ? `<p class="dk-hint" style="margin-top:16px">Orgs with no pu
     };
 
     const legend = `<p class="ai-legend">${AI_TYPES.map((t) => `<span><i style="background:${AI_TYPE_COLOR[t]}"></i>${esc(AI_TYPE_LABEL[t])}</span>`).join("")}</p>`;
-    const h2 = (t) => `<h2 class="ai-h2">${t}</h2>`;
-    const hint = (t) => `<p class="dk-hint ai-hint">${t}</p>`;
     const typeRows = AI_TYPES.map((t) => byType[t]).filter(Boolean).sort((a, b) => a.share - b.share);
     const prop = byType.proprietary, am = byType.asset_manager;
     const lowFirms = [...firmsAi].reverse().filter((f) => f.type === "proprietary").slice(0, 3);
-    const intro = `How many open postings at quant firms ask candidates to use AI tools such as Claude, Copilot or ChatGPT in the job. Prop trading firms ask in ${fmtPct(prop.share)} of postings, asset managers in ${fmtPct(am.share)}.`;
-
-    const purposeRows = [
-      ["General productivity: writing, documents, workflows", purposeCount("productivity")],
-      ["Coding", purposeCount("coding")],
-      ["Research and analysis", purposeCount("research")],
-      ["Not stated", purposeCount("unspecified")],
-    ]
-      .map(([k, v]) => `<tr><td>${esc(k)}</td><td class="dk-num">${v}</td><td class="dk-num">${fmtPct(pct(v, asking.length))}</td></tr>`)
-      .join("\n");
-    const toolRows = [
-      ["Claude", toolCount("Claude"), `${claudeCode} say Claude Code`],
-      ["ChatGPT or Codex", toolCount("ChatGPT"), ""],
-      ["Copilot", toolCount("Copilot"), ""],
-      ["Cursor", toolCount("Cursor"), ""],
-    ]
-      .map(([k, v, note]) => `<tr><td>${esc(k)}</td><td class="dk-num">${v}</td><td class="dk-hide-sm" style="color:var(--dk-muted)">${esc(note)}</td></tr>`)
-      .join("\n");
+    const quantResearch = rolesAi.find((r) => r.key === "quantitative_research");
+    const required = asking.filter((j) => j.aiAsk === "required").length;
     const named = asking.filter((j) => (j.aiTools || []).some((t) => t !== "AI tools")).length;
+    // Shares of the postings that ask, for the purpose and tool cards.
+    const ofAsking = (key, count) => ({ key, ask: count, n: asking.length, share: pct(count, asking.length) });
+    const purposeRows = [
+      ofAsking("General productivity", purposeCount("productivity")),
+      ofAsking("Coding", purposeCount("coding")),
+      ofAsking("Research and analysis", purposeCount("research")),
+      ofAsking("Not stated", purposeCount("unspecified")),
+    ];
+    const toolRows = [
+      ofAsking("Claude", toolCount("Claude")),
+      ofAsking("ChatGPT or Codex", toolCount("ChatGPT")),
+      ofAsking("Copilot", toolCount("Copilot")),
+      ofAsking("Cursor", toolCount("Cursor")),
+    ].sort((a, b) => b.ask - a.ask);
+    const grey = () => "#505a5f";
+    const card = (id, title, description, body) => renderer.renderChartCard({ id, title, description, body });
 
     write(
       "/ai-tools",
@@ -1360,24 +1357,47 @@ ${emptyOrgs.length ? `<p class="dk-hint" style="margin-top:16px">Orgs with no pu
         title: "AI Tools in Quant Job Postings, by Firm and Role | Quant Jobs",
         description: `Which quant firms ask candidates to use AI tools like Claude, Copilot or ChatGPT: ${fmtPct(pct(all.ask, all.n))} of ${all.n.toLocaleString()} open postings, from ${fmtPct(prop.share)} at prop trading firms to ${fmtPct(am.share)} at asset managers. Updated daily.`,
         jsonLd: datasetLd("AI tools in quant job postings", "Share of open quant-firm job postings that ask candidates to use AI tools, by firm, firm type and role.", `${BASE}/ai-tools`),
-        h1: "AI tools in quant job postings",
-        intro,
+        h1: "Prop trading firms ask least for AI tools in their job postings",
+        intro: `${fmtPct(pct(all.ask, all.n))} of open postings at quant firms ask candidates to use AI tools like Claude, Copilot or ChatGPT in the job: ${fmtPct(prop.share)} at prop trading firms, ${fmtPct(am.share)} at asset managers. Quant researchers are asked least of any role.`,
         ogImage: "og-ai-tools.png",
-        bodyHtml: `${h2("By firm type")}
-${hint(`${all.ask.toLocaleString()} of ${all.n.toLocaleString()} postings ask for AI tools; ${asking.filter((j) => j.aiAsk === "required").length} of them as a requirement or part of the job, the rest as a plus.`)}
-${barChart(typeRows, { label: (r, narrow) => (narrow ? AI_TYPE_LABEL[r.key].replace(" & market making", "") : AI_TYPE_LABEL[r.key]), color: (r) => AI_TYPE_COLOR[r.key], title: (r) => `${AI_TYPE_LABEL[r.key] ?? "Firm type"}: ${r.ask} of ${r.n} postings ask for AI tools` })}
-${h2("By firm")}
-${hint(`Firms with ${MIN_FIRM} or more postings. ${lowFirms.map((f) => `${esc(SHORT[f.key] ?? f.key)} ${fmtPct(f.share)}`).join(", ")}.`)}
-${legend}
-${dotChart(firmsAi)}
-${h2("By role")}
-${barChart(rolesAi, { label: (r) => ROLE_LABELS[r.key] ?? r.key, color: () => "#2a78d6", title: (r) => `${ROLE_LABELS[r.key] ?? "Role"}: ${r.ask} of ${r.n} postings ask for AI tools` })}
-${h2("What the tools are for")}
-${kitTable(`<th>Use</th><th class="dk-num">Postings</th><th class="dk-num">Share</th>`, purposeRows)}
-${h2("Tools named")}
-${hint(`${named} of the ${asking.length} postings name a tool; the rest ask for AI tools in general.`)}
-${kitTable(`<th>Tool</th><th class="dk-num">Postings</th><th class="dk-hide-sm"></th>`, toolRows)}
-<p class="dk-hint ai-method">A posting counts when it requires or prefers using AI tools in the job. Building AI models doesn't count, and nor do notices that ban AI in interviews. A language model reads each posting's sentences about AI to decide. Updated daily.</p>`,
+        bodyHtml: [
+          card(
+            "ai-type",
+            "Postings that ask for AI tools, by firm type",
+            `${all.ask.toLocaleString()} of ${all.n.toLocaleString()} postings ask. ${required} require AI tools or make them part of the job; the rest list them as a plus.`,
+            barChart(typeRows, { label: (r, narrow) => (narrow ? AI_TYPE_LABEL[r.key].replace(" & market making", "") : AI_TYPE_LABEL[r.key]), color: (r) => AI_TYPE_COLOR[r.key], title: (r) => `${AI_TYPE_LABEL[r.key]}: ${r.ask} of ${r.n} postings ask for AI tools` }),
+          ),
+          card(
+            "ai-firm",
+            "Postings that ask for AI tools, by firm",
+            `Firms with ${MIN_FIRM} or more postings. ${lowFirms.map((f) => `${SHORT[f.key] ?? f.key} ${fmtPct(f.share)}`).join(", ")}.`,
+            legend + dotChart(firmsAi),
+          ),
+          card(
+            "ai-role",
+            "Postings that ask for AI tools, by role",
+            quantResearch ? `Quant researchers are asked least: ${quantResearch.ask} of ${quantResearch.n} postings.` : "",
+            barChart(rolesAi, { label: (r) => ROLE_LABELS[r.key] ?? r.key, color: () => "#2a78d6", title: (r) => `${ROLE_LABELS[r.key] ?? r.key}: ${r.ask} of ${r.n} postings ask for AI tools` }),
+          ),
+          card(
+            "ai-purpose",
+            "What the postings ask AI tools for",
+            `Share of the ${asking.length} postings that ask. Most are for general office work: writing, documents and workflows.`,
+            barChart(purposeRows, { label: (r) => r.key, color: grey, title: (r) => `${r.key}: ${r.ask} of ${r.n} postings` }),
+          ),
+          card(
+            "ai-tools-named",
+            "AI tools named in postings",
+            `${named} of the ${asking.length} postings name a tool; ${claudeCode} of the Claude ones say Claude Code. The rest ask for AI tools in general.`,
+            barChart(toolRows, { label: (r) => r.key, color: grey, title: (r) => `${r.key}: named in ${r.ask} of ${r.n} postings` }),
+          ),
+          `<section class="ai-about">${renderer.renderSectionHeading({ title: "About the data" })}<ul>
+<li>Live postings from the firms' own careers pages, updated daily. Hedge funds, prop trading firms and asset managers only.</li>
+<li>A posting counts when it requires or prefers using AI tools in the job. Building AI models doesn't count, and nor do notices that ban AI in interviews.</li>
+<li>A language model reads each posting's sentences about AI and decides. Tool names are matched in the text.</li>
+<li>Some firms reuse one template across many postings, so a single sentence can move a firm's share.</li>
+</ul></section>`,
+        ].join("\n"),
         navHtml: insightsNav(),
         showCrumbs: false,
       }),
