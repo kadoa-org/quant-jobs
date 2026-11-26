@@ -38,6 +38,10 @@ for (const file of ['tech-stack.html', 'locations.html', 'internships.html', 'st
   assert(!html.includes('seo-shell'), file);
   assert.equal(seed(html).pathname, '/quant/' + file.replace('.html', ''));
 }
+const aiPage = read('ai-tools/index.html');
+assert.match(aiPage, /<h1[^>]*>AI tools in quant job postings<\/h1>/);
+assert.match(aiPage, /Prop trading firms ask in [\d.]+% of postings/, "the lede carries the live firm-type shares");
+assert.equal((aiPage.match(/class="ai-chart ai-wide"/g) || []).length, 3, "three charts, each with a wide and a narrow drawing");
 const detail = read('stacks/firm/jane-street/index.html');
 assert.equal(seed(detail).pathname, '/quant/stacks/firm/jane-street');
 assert(/1 firm and \d+ open jobs/.test(detail.replace(/<[^>]*>/g, "")), "firm detail is already filtered before hydration");

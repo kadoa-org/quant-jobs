@@ -208,7 +208,7 @@ const siteFooter = `<footer class="dk-footer">
 
 // `crumbs` is the trail above the h1 as [href, label] pairs, the page itself last and unlinked. It is also emitted as
 // BreadcrumbList structured data, so search results show the trail instead of the raw URL.
-function page({ pathname, title, description, jsonLd, h1, intro, bodyHtml, navHtml = seoNav, showCrumbs = true, crumbs = null }) {
+function page({ pathname, title, description, jsonLd, h1, intro, bodyHtml, navHtml = seoNav, showCrumbs = true, crumbs = null, ogImage = "screenshot.png" }) {
   const trail = crumbs ?? [[PREFIX, "Quant Jobs"], [null, h1]];
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -237,17 +237,25 @@ function page({ pathname, title, description, jsonLd, h1, intro, bodyHtml, navHt
 <meta property="og:title" content="${esc(title)}" />
 <meta property="og:description" content="${esc(description)}" />
 <meta property="og:url" content="${url}" />
-<meta property="og:image" content="${BASE}/screenshot.png" />
+<meta property="og:image" content="${BASE}/${ogImage}" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${esc(title)}" />
 <meta name="twitter:description" content="${esc(description)}" />
-<meta name="twitter:image" content="${BASE}/screenshot.png" />
+<meta name="twitter:image" content="${BASE}/${ogImage}" />
 ${cssHref ? `<link rel="stylesheet" href="${cssHref}" />` : ""}
 <script src="${PREFIX}/search.js" defer></script>
 ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : ""}
 <style>
   /* Page-only styles; the look comes from the kit's .dk-* classes in the bundle CSS. */
   body{margin:0;background:#fff;color:var(--dk-ink);font:19px/1.4 var(--dk-font)}
+  .ai-h2{font:700 var(--dk-fs-l)/1.25 var(--dk-font);margin:44px 0 12px}
+  .ai-hint{margin:0 0 14px}
+  .ai-chart{display:block;max-width:720px;height:auto}
+  .ai-narrow{display:none}
+  @media (max-width:560px){.ai-wide{display:none}.ai-narrow{display:block}}
+  .ai-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0 0 6px;font-size:var(--dk-fs-s);color:var(--dk-muted)}
+  .ai-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:baseline}
+  .ai-method{margin-top:36px;max-width:var(--dk-text-column,720px)}
   /* vertical only — must not reset the .dk-container 0 15px side padding */
   .seo-main{padding-top:40px;padding-bottom:60px}
   @media (max-width:640px){.seo-main{padding-top:25px;padding-bottom:40px}}
@@ -1224,6 +1232,158 @@ ${emptyOrgs.length ? `<p class="dk-hint" style="margin-top:16px">Orgs with no pu
     }),
   );
   console.log(`open-source page: ${active.length} firms`);
+}
+
+// ── /ai-tools — which firms ask candidates to use AI tools ───────────────────
+// aiAsk comes from the jobs pipeline's classifier (TypeSafe Jev, scripts/classifyAiUse.ts in the datasets repo): set
+// when a posting requires or prefers using AI tools in the job, absent otherwise. The share is over postings with a
+// description, since the classifier reads the description; the named tools come from aiTools.
+{
+  const AI_TYPES = ["proprietary", "hedge_fund", "asset_manager"];
+  const AI_TYPE_COLOR = { proprietary: "#f97316", hedge_fund: "#8b5cf6", asset_manager: "#10b981" };
+  const AI_TYPE_LABEL = { proprietary: "Prop trading & market making", hedge_fund: "Hedge fund", asset_manager: "Asset manager" };
+  const SHORT = { "Hudson River Trading": "HRT", "Susquehanna (SIG)": "SIG", "Qube RT (QRT)": "QRT", "Balyasny Asset Management": "Balyasny", "Brookfield Asset Management": "Brookfield", "Stevens Capital Management": "Stevens Capital" };
+  const MIN_FIRM = 30;
+  const MIN_ROLE = 80;
+  const described = jobs.filter((j) => descriptions[j.id] && AI_TYPES.includes(j.firmType));
+  const asks = (j) => j.aiAsk === "required" || j.aiAsk === "preferred";
+  const pct = (a, n) => (n ? (100 * a) / n : 0);
+  const fmtPct = (v) => `${v === 0 ? 0 : v < 10 ? v.toFixed(1) : Math.round(v)}%`;
+  const group = (key) => {
+    const m = new Map();
+    for (const j of described) {
+      const k = key(j);
+      if (k == null) continue;
+      const g = m.get(k) ?? { key: k, n: 0, ask: 0, required: 0, preferred: 0, type: j.firmType };
+      g.n++;
+      if (asks(j)) {
+        g.ask++;
+        g[j.aiAsk]++;
+      }
+      m.set(k, g);
+    }
+    return [...m.values()].map((g) => ({ ...g, share: pct(g.ask, g.n) }));
+  };
+  const all = { n: described.length, ask: described.filter(asks).length };
+
+  if (all.ask) {
+    const byType = Object.fromEntries(group((j) => j.firmType).map((g) => [g.key, g]));
+    const firmsAi = group((j) => j.firmName).filter((g) => g.n >= MIN_FIRM).sort((a, b) => b.share - a.share || b.n - a.n);
+    const rolesAi = group((j) => j.roleCategory).filter((g) => g.n >= MIN_ROLE && g.key !== "other").sort((a, b) => b.share - a.share);
+    const asking = described.filter(asks);
+    const purposeCount = (p) => asking.filter((j) => j.aiPurpose === p).length;
+    const toolCount = (t) => asking.filter((j) => (j.aiTools || []).includes(t)).length;
+    const claudeCode = asking.filter((j) => /claude code/i.test(descriptions[j.id])).length;
+
+    const tick = (v) => `${v}%`;
+    // Each chart is drawn twice, wide and narrow, and CSS shows one: SVG text scales with the chart, so a phone gets a
+    // chart drawn at its width (without the count column) instead of the desktop one shrunk to unreadable labels.
+    const both = (draw) => draw(false) + draw(true);
+    const axisMax = (max) => Math.max(10, Math.ceil(max / 10) * 10);
+    const svgText = (x, y, t, attrs = "") => `<text x="${x}" y="${y}" ${attrs}>${esc(t)}</text>`;
+    const FONT = `font-family="Inter, system-ui, sans-serif"`;
+
+    // Horizontal bars, one per row: label, bar, then the share and the count after the bar.
+    const barChart = (rows, opts) => both((narrow) => barSvg(rows, opts, narrow));
+    const barSvg = (rows, { label, color, title }, narrow) => {
+      const W = narrow ? 380 : 720, labelW = narrow ? 196 : 210, valueW = narrow ? 44 : 130, rowH = 30, top = 22, barH = 16;
+      const plotW = W - labelW - valueW;
+      const max = axisMax(Math.max(...rows.map((r) => r.share)));
+      const x = (v) => labelW + (v / max) * plotW;
+      const H = top + rows.length * rowH + 4;
+      const grid = [0, max / 2, max]
+        .map((v) => `<line x1="${x(v)}" x2="${x(v)}" y1="${top - 6}" y2="${H}" stroke="#ececea"/>${svgText(x(v), top - 10, tick(v), `text-anchor="middle" font-size="11" fill="#6b6b6b"`)}`)
+        .join("");
+      const bars = rows
+        .map((r, i) => {
+          const y = top + i * rowH;
+          const w = Math.max(2, x(r.share) - labelW);
+          return `<g><title>${esc(title(r))}</title>${svgText(labelW - 10, y + rowH / 2 + 5, label(r, narrow), `text-anchor="end" font-size="14" fill="#1a1a1a"`)}<rect x="${labelW}" y="${y + (rowH - barH) / 2}" width="${w}" height="${barH}" rx="3" fill="${color(r)}"/>${svgText(labelW + w + 8, y + rowH / 2 + 5, fmtPct(r.share), `font-size="13" font-weight="600" fill="#1a1a1a"`)}${narrow ? "" : svgText(labelW + w + 52, y + rowH / 2 + 5, `${r.ask} of ${r.n.toLocaleString()}`, `font-size="12" fill="#6b6b6b"`)}</g>`;
+        })
+        .join("");
+      return `<svg class="ai-chart${narrow ? " ai-narrow" : " ai-wide"}" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Share of postings that ask for AI tools" ${FONT}>${grid}${bars}</svg>`;
+    };
+
+    // Dot plot, a row per firm: the dot sits at the firm's share, coloured by firm type.
+    const dotChart = (rows) => both((narrow) => dotSvg(rows, narrow));
+    const dotSvg = (rows, narrow) => {
+      const W = narrow ? 380 : 720, labelW = narrow ? 142 : 150, valueW = narrow ? 14 : 90, rowH = 22, top = 22;
+      const plotW = W - labelW - valueW;
+      const max = axisMax(Math.max(...rows.map((r) => r.share)));
+      const x = (v) => labelW + (v / max) * plotW;
+      const H = top + rows.length * rowH + 4;
+      const ticks = [];
+      for (let v = 0; v <= max; v += narrow ? 20 : 10) ticks.push(v);
+      const grid = ticks
+        .map((v) => `<line x1="${x(v)}" x2="${x(v)}" y1="${top - 6}" y2="${H}" stroke="#ececea"/>${svgText(x(v), top - 10, tick(v), `text-anchor="middle" font-size="11" fill="#6b6b6b"`)}`)
+        .join("");
+      const dots = rows
+        .map((r, i) => {
+          const y = top + i * rowH + rowH / 2;
+          const t = `${r.key}: ${r.ask} of ${r.n} postings ask for AI tools (${r.required} required, ${r.preferred} preferred)`;
+          return `<g><title>${esc(t)}</title><rect x="0" y="${y - rowH / 2}" width="${W}" height="${rowH}" fill="transparent"/>${svgText(labelW - 10, y + 5, SHORT[r.key] ?? r.key, `text-anchor="end" font-size="13.5" fill="#1a1a1a"`)}<line x1="${labelW}" x2="${x(r.share)}" y1="${y}" y2="${y}" stroke="${AI_TYPE_COLOR[r.type]}" stroke-opacity="0.35" stroke-width="2"/><circle cx="${x(r.share)}" cy="${y}" r="5.5" fill="${AI_TYPE_COLOR[r.type]}" stroke="#fff" stroke-width="2"/>${narrow ? "" : svgText(W - 4, y + 4.5, `${r.ask} of ${r.n}`, `text-anchor="end" font-size="12" fill="#6b6b6b"`)}</g>`;
+        })
+        .join("");
+      return `<svg class="ai-chart${narrow ? " ai-narrow" : " ai-wide"}" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Share of each firm's postings that ask for AI tools" ${FONT}>${grid}${dots}</svg>`;
+    };
+
+    const legend = `<p class="ai-legend">${AI_TYPES.map((t) => `<span><i style="background:${AI_TYPE_COLOR[t]}"></i>${esc(AI_TYPE_LABEL[t])}</span>`).join("")}</p>`;
+    const h2 = (t) => `<h2 class="ai-h2">${t}</h2>`;
+    const hint = (t) => `<p class="dk-hint ai-hint">${t}</p>`;
+    const typeRows = AI_TYPES.map((t) => byType[t]).filter(Boolean).sort((a, b) => a.share - b.share);
+    const prop = byType.proprietary, am = byType.asset_manager;
+    const lowFirms = [...firmsAi].reverse().filter((f) => f.type === "proprietary").slice(0, 3);
+    const intro = `How many open postings at quant firms ask candidates to use AI tools such as Claude, Copilot or ChatGPT in the job. Prop trading firms ask in ${fmtPct(prop.share)} of postings, asset managers in ${fmtPct(am.share)}.`;
+
+    const purposeRows = [
+      ["General productivity: writing, documents, workflows", purposeCount("productivity")],
+      ["Coding", purposeCount("coding")],
+      ["Research and analysis", purposeCount("research")],
+      ["Not stated", purposeCount("unspecified")],
+    ]
+      .map(([k, v]) => `<tr><td>${esc(k)}</td><td class="dk-num">${v}</td><td class="dk-num">${fmtPct(pct(v, asking.length))}</td></tr>`)
+      .join("\n");
+    const toolRows = [
+      ["Claude", toolCount("Claude"), `${claudeCode} say Claude Code`],
+      ["ChatGPT or Codex", toolCount("ChatGPT"), ""],
+      ["Copilot", toolCount("Copilot"), ""],
+      ["Cursor", toolCount("Cursor"), ""],
+    ]
+      .map(([k, v, note]) => `<tr><td>${esc(k)}</td><td class="dk-num">${v}</td><td class="dk-hide-sm" style="color:var(--dk-muted)">${esc(note)}</td></tr>`)
+      .join("\n");
+    const named = asking.filter((j) => (j.aiTools || []).some((t) => t !== "AI tools")).length;
+
+    write(
+      "/ai-tools",
+      page({
+        pathname: "/ai-tools",
+        title: "AI Tools in Quant Job Postings, by Firm and Role | Quant Jobs",
+        description: `Which quant firms ask candidates to use AI tools like Claude, Copilot or ChatGPT: ${fmtPct(pct(all.ask, all.n))} of ${all.n.toLocaleString()} open postings, from ${fmtPct(prop.share)} at prop trading firms to ${fmtPct(am.share)} at asset managers. Updated daily.`,
+        jsonLd: datasetLd("AI tools in quant job postings", "Share of open quant-firm job postings that ask candidates to use AI tools, by firm, firm type and role.", `${BASE}/ai-tools`),
+        h1: "AI tools in quant job postings",
+        intro,
+        ogImage: "og-ai-tools.png",
+        bodyHtml: `${h2("By firm type")}
+${hint(`${all.ask.toLocaleString()} of ${all.n.toLocaleString()} postings ask for AI tools; ${asking.filter((j) => j.aiAsk === "required").length} of them as a requirement or part of the job, the rest as a plus.`)}
+${barChart(typeRows, { label: (r, narrow) => (narrow ? AI_TYPE_LABEL[r.key].replace(" & market making", "") : AI_TYPE_LABEL[r.key]), color: (r) => AI_TYPE_COLOR[r.key], title: (r) => `${AI_TYPE_LABEL[r.key] ?? "Firm type"}: ${r.ask} of ${r.n} postings ask for AI tools` })}
+${h2("By firm")}
+${hint(`Firms with ${MIN_FIRM} or more postings. ${lowFirms.map((f) => `${esc(SHORT[f.key] ?? f.key)} ${fmtPct(f.share)}`).join(", ")}.`)}
+${legend}
+${dotChart(firmsAi)}
+${h2("By role")}
+${barChart(rolesAi, { label: (r) => ROLE_LABELS[r.key] ?? r.key, color: () => "#2a78d6", title: (r) => `${ROLE_LABELS[r.key] ?? "Role"}: ${r.ask} of ${r.n} postings ask for AI tools` })}
+${h2("What the tools are for")}
+${kitTable(`<th>Use</th><th class="dk-num">Postings</th><th class="dk-num">Share</th>`, purposeRows)}
+${h2("Tools named")}
+${hint(`${named} of the ${asking.length} postings name a tool; the rest ask for AI tools in general.`)}
+${kitTable(`<th>Tool</th><th class="dk-num">Postings</th><th class="dk-hide-sm"></th>`, toolRows)}
+<p class="dk-hint ai-method">A posting counts when it requires or prefers using AI tools in the job. Building AI models doesn't count, and nor do notices that ban AI in interviews. A language model reads each posting's sentences about AI to decide. Updated daily.</p>`,
+        navHtml: insightsNav(),
+        showCrumbs: false,
+      }),
+    );
+    console.log(`ai-tools page: ${all.ask} of ${all.n} postings ask, ${firmsAi.length} firms`);
+  }
 }
 
 // Same-origin JS file (dataset CSP blocks inline scripts): click-to-sort on the insights-page tables (/open-source, /internships).
