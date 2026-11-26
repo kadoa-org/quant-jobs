@@ -43,7 +43,7 @@ for (const file of ['tech-stack.html', 'locations.html', 'internships.html', 'st
   assert.equal(seed(html).pathname, '/quant/' + file.replace('.html', ''));
 }
 const aiPage = read('ai-tools/index.html');
-assert.match(aiPage, /<h1[^>]*>Prop trading firms ask least for AI tools in their job postings<\/h1>/);
+assert.match(aiPage, /<h1[^>]*>AI tools in quant job postings<\/h1>/);
 assert.match(aiPage, /[\d.]+% at prop trading firms, [\d.]+% at asset managers/, "the lede carries the live firm-type shares");
 assert.equal((aiPage.match(/class="dk-card"/g) || []).length, 5, "five kit chart cards");
 assert.equal((aiPage.match(/class="ai-chart ai-wide"/g) || []).length, 5, "each chart has a wide and a narrow drawing");

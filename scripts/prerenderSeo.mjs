@@ -1357,7 +1357,7 @@ ${emptyOrgs.length ? `<p class="dk-hint" style="margin-top:16px">Orgs with no pu
         title: "AI Tools in Quant Job Postings, by Firm and Role | Quant Jobs",
         description: `Which quant firms ask candidates to use AI tools like Claude, Copilot or ChatGPT: ${fmtPct(pct(all.ask, all.n))} of ${all.n.toLocaleString()} open postings, from ${fmtPct(prop.share)} at prop trading firms to ${fmtPct(am.share)} at asset managers. Updated daily.`,
         jsonLd: datasetLd("AI tools in quant job postings", "Share of open quant-firm job postings that ask candidates to use AI tools, by firm, firm type and role.", `${BASE}/ai-tools`),
-        h1: "Prop trading firms ask least for AI tools in their job postings",
+        h1: "AI tools in quant job postings",
         intro: `${fmtPct(pct(all.ask, all.n))} of open postings at quant firms ask candidates to use AI tools like Claude, Copilot or ChatGPT in the job: ${fmtPct(prop.share)} at prop trading firms, ${fmtPct(am.share)} at asset managers. Quant researchers are asked least of any role.`,
         ogImage: "og-ai-tools.png",
         bodyHtml: [
