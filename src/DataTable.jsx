@@ -77,28 +77,6 @@ export default function DataTable({ jobs, onClearAll, hasQuery, onClearQuery }) 
     topRef.current?.scrollIntoView({ block: "start" });
   };
 
-  const exportCsv = () => {
-    const headers = ["Firm", "Job", "Role", "Location", "Seniority", "Salary", "Languages", "Date posted", "Date added"];
-    const rows = sorted.map((j) => [
-      j.firmName,
-      j.jobTitle,
-      ROLE_LABELS[j.roleCategory] || j.roleCategory,
-      j.locations.join("; "),
-      SENIORITY_LABELS[j.seniorityLevel] || j.seniorityLevel,
-      j.salary || "",
-      j.programmingLanguages.join(", "),
-      j.datePosted || "",
-      j.dateAdded || "",
-    ]);
-    const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "quant-jobs.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   const meta = (j) =>
     [j.locations.slice(0, 2).join(", "), WORK_MODE_LABELS[j.workMode], SENIORITY_LABELS[j.seniorityLevel], salaryText(j.salary)].filter(Boolean);
 
@@ -108,9 +86,6 @@ export default function DataTable({ jobs, onClearAll, hasQuery, onClearQuery }) 
         <p className="jobs__count" aria-live="polite">
           <strong>{sorted.length.toLocaleString("en-US")}</strong> {sorted.length === 1 ? "job" : "jobs"}
         </p>
-        <button type="button" onClick={exportCsv} className="jobs__export">
-          Download CSV
-        </button>
       </div>
 
       {sorted.length > 0 && (

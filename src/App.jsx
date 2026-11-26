@@ -3,7 +3,7 @@ import AboutPage from "./AboutPage";
 import { EMPTY_FILTERS } from "./constants";
 import Dashboard from "./Dashboard";
 import DataTable from "./DataTable";
-import FilterBar, { FIRM_FILTER_KEYS, JOB_FILTER_KEYS } from "./FilterBar";
+import FilterBar, { FIRM_FILTER_KEYS, JOB_FILTER_KEYS, meetsPay } from "./FilterBar";
 import FirmsTable from "./FirmsTable";
 import InsightsPage from "./InsightsPage";
 import { INSIGHT_VIEWS } from "./insights";
@@ -219,28 +219,37 @@ export default function App({ initialPage = null }) {
     setStats({});
   }, [db]);
 
-  const filteredJobs = useMemo(() => {
-    return jobs.filter((j) => {
-      if (filters.firmTypes.length > 0 && !filters.firmTypes.includes(j.firmType)) return false;
-      if (filters.roleCategories.length > 0 && !filters.roleCategories.includes(j.roleCategory)) return false;
-      if (filters.seniorityLevels.length > 0 && !filters.seniorityLevels.includes(j.seniorityLevel)) return false;
-      if (filters.workModes.length > 0 && !filters.workModes.includes(j.workMode)) return false;
-      if (filters.pay.includes("listed") && !j.salary) return false;
-      if (filters.locations.length > 0 && !j.locations.some((l) => filters.locations.includes(l))) return false;
-      if (filters.assetClasses.length > 0 && !j.assetClasses.some((a) => filters.assetClasses.includes(a)))
+  // One test for every filter. `except` leaves one group out: a group's own options are counted as if it were not
+  // applied, so picking "Senior" still offers "Mid" (OR within a group) instead of counting it at zero and hiding it.
+  // Technologies stay applied: several selected technologies must all match, so their counts narrow as you pick.
+  const matchesFilters = useCallback(
+    (j, except = null) => {
+      if (except !== "firmTypes" && filters.firmTypes.length > 0 && !filters.firmTypes.includes(j.firmType)) return false;
+      if (except !== "roleCategories" && filters.roleCategories.length > 0 && !filters.roleCategories.includes(j.roleCategory)) return false;
+      if (except !== "seniorityLevels" && filters.seniorityLevels.length > 0 && !filters.seniorityLevels.includes(j.seniorityLevel)) return false;
+      if (except !== "workModes" && filters.workModes.length > 0 && !filters.workModes.includes(j.workMode)) return false;
+      if (except !== "pay" && filters.pay.length > 0 && !meetsPay(j, filters.pay[0])) return false;
+      if (except !== "locations" && filters.locations.length > 0 && !j.locations.some((l) => filters.locations.includes(l))) return false;
+      if (except !== "assetClasses" && filters.assetClasses.length > 0 && !j.assetClasses.some((a) => filters.assetClasses.includes(a)))
         return false;
       // OR across selected skill areas: a posting in any of them qualifies.
-      if (!matchesAnySkillArea(j, filters.skillAreas)) return false;
+      if (except !== "skillAreas" && !matchesAnySkillArea(j, filters.skillAreas)) return false;
       // AND across selected technologies, case-insensitive across both tech
       // fields, so "kdb+/q" from the stacks page matches "KDB+/Q" in a posting.
       if (filters.technologies.length > 0) {
         const mine = [...(j.programmingLanguages ?? []), ...(j.technologies ?? [])].map((t) => t.toLowerCase());
         if (!filters.technologies.every((t) => mine.includes(t.toLowerCase()))) return false;
       }
-      if (selectedFirm && j.firmName !== selectedFirm) return false;
+      if (except !== "firm" && selectedFirm && j.firmName !== selectedFirm) return false;
       return true;
-    });
-  }, [jobs, filters, selectedFirm]);
+    },
+    [filters, selectedFirm],
+  );
+  const filteredJobs = useMemo(() => jobs.filter((j) => matchesFilters(j)), [jobs, matchesFilters]);
+  const facetJobs = useMemo(() => {
+    const cache = {};
+    return (key) => (cache[key] ??= jobs.filter((j) => matchesFilters(j, key)));
+  }, [jobs, matchesFilters]);
 
   // The jobs list also applies the two search fields: "What" across title, firm, languages and skills, "Where" across
   // locations, with "remote" also matching postings marked remote.
@@ -298,6 +307,7 @@ export default function App({ initialPage = null }) {
       filters={filters}
       setFilters={setFilters}
       jobs={filteredJobs}
+      facetJobs={facetJobs}
       allJobs={jobs}
       selectedFirm={selectedFirm}
       onClearFirm={() => setSelectedFirm(null)}
@@ -350,9 +360,9 @@ export default function App({ initialPage = null }) {
             {/* A job board opens on the list: title, one line of scope, then search and the table, as openquant,
                 eFinancialCareers and Wellfound do. Market figures live on the Insights pages. */}
             <div className="home-intro">
-              <h1 className="dk-h1">Quant jobs</h1>
+              <h1 className="dk-h1">The most comprehensive quant job board</h1>
               <p className="home-lede">
-                {jobs.length.toLocaleString("en-US")} open roles at {new Set(jobs.map((j) => j.firmName)).size} hedge funds, trading firms and asset managers, updated daily.
+                {filteredJobs.length.toLocaleString("en-US")} open roles at {new Set(filteredJobs.map((j) => j.firmName)).size} firms, updated daily.
               </p>
             </div>
             <form className="job-search" role="search" onSubmit={(e) => e.preventDefault()}>

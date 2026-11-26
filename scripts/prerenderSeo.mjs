@@ -1624,7 +1624,7 @@ const headRows = ranked
 const HEAD_CONTENT = {
   "index.html": {
     h1: `Quant Jobs: ${firms.size} Firms Hiring Across ${jobsStr} Open Roles`,
-    intro: `${boardStr} open quant roles, updated daily, across ${firms.size} hedge funds, prop trading firms, market makers, and asset managers. The 20 firms with the most open postings are listed below; use the interactive board above to filter by role, language, location, and seniority.`,
+    intro: `The most comprehensive quant job board: ${boardStr} open quant roles, updated daily, across ${firms.size} hedge funds, prop trading firms, market makers, and asset managers. The 20 firms with the most open postings are listed below; use the interactive board above to filter by role, language, location, and seniority.`,
   },
   "tech-stack.html": {
     h1: `Quant Tech Heatmap: Languages &amp; Tools Across ${firmsWithLang} Firms`,
@@ -1701,11 +1701,11 @@ for (const shell of ["index.html", "tech-stack.html", "locations.html", "stacks.
   const boardJobs = jobs.filter((j) => BOARD_ROLES.has(j.roleCategory));
   const roles = `${(Math.floor(boardJobs.length / 100) * 100).toLocaleString()}+`;
   const firmCount = `${Math.floor(new Set(boardJobs.map((j) => j.firmName)).size / 10) * 10}+`;
-  const homeTitle = `Quant Jobs: ${roles} Open Roles at ${firmCount} Firms, Updated Daily`;
+  const homeTitle = `Quant Jobs: The Most Comprehensive Quant Job Board, ${roles} Roles at ${firmCount} Firms`;
   let html = fs.readFileSync(p, "utf8");
   html = html
     .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(homeTitle)}</title>`)
-    .replace(/(<meta property="og:title" content=")[^"]*(")/, (_m, a, b) => `${a}${esc(`Quant Jobs: ${roles} Open Roles at ${firmCount} Firms`)}${b}`)
+    .replace(/(<meta property="og:title" content=")[^"]*(")/, (_m, a, b) => `${a}${esc("Quant Jobs: The Most Comprehensive Quant Job Board")}${b}`)
     .replace(
       /(<meta property="og:description" content=")[^"]*(")/,
       (_m, a, b) => `${a}${esc(`${roles} open roles at ${firmCount} hedge funds, prop shops and market makers, updated daily. Filter, search and download.`)}${b}`,
@@ -1713,11 +1713,11 @@ for (const shell of ["index.html", "tech-stack.html", "locations.html", "stacks.
     .replace(
       /(<meta name="description" content=")[^"]*(")/,
       (_m, a, b) =>
-        `${a}${esc(`${roles} open quant roles at ${firmCount} hedge funds, prop trading firms, market makers and asset managers, updated daily. Filter by role, language, location and seniority, or download the open dataset.`)}${b}`,
+        `${a}${esc(`The most comprehensive quant job board: ${roles} open roles at ${firmCount} hedge funds, prop trading firms, market makers and asset managers, updated daily. Filter by role, language, location and seniority, or download the open dataset.`)}${b}`,
     )
     .replace(
       /(<meta name="twitter:description" content=")[^"]*(")/,
-      (_m, a, b) => `${a}${esc(`${roles} open quant roles at ${firmCount} firms, updated daily.`)}${b}`,
+      (_m, a, b) => `${a}${esc(`The most comprehensive quant job board: ${roles} open roles at ${firmCount} firms, updated daily.`)}${b}`,
     )
     // Homepage JSON-LD carries the same stale firm counts as the sub-page shells.
     .replace(/\b42 buy-side/g, `${firmsWithLang} buy-side`)

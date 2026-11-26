@@ -2,6 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { EMPTY_FILTERS, FIRM_TYPE_LABELS, ROLE_LABELS, SENIORITY_LABELS, SENIORITY_ORDER, WORK_MODE_LABELS } from "./constants";
 import { matchesSkillArea, SKILL_AREA_NAMES } from "./skillAreas";
 
+export const PAY_OPTIONS = [
+  { value: "listed", label: "Shows a salary" },
+  { value: "150000", label: "$150k or more" },
+  { value: "200000", label: "$200k or more" },
+  { value: "300000", label: "$300k or more" },
+];
+export const meetsPay = (j, value) => Boolean(j.salary) && (value === "listed" || j.salary >= Number(value));
+
 export function FilterDropdown({ options, selected, onChange, onClose, singleSelect }) {
   const ref = useRef(null);
   const [search, setSearch] = useState("");
@@ -61,22 +69,11 @@ export function FilterDropdown({ options, selected, onChange, onClose, singleSel
                   onChange(isSelected ? selected.filter((v) => v !== value) : [...selected, value]);
                 }
               }}
-              className="w-full flex items-center justify-between px-3 h-[38px] text-[16px] transition-colors hover:bg-[#f5f5f5]"
+              className="w-full flex items-center justify-between px-3 min-h-[44px] text-[16px] transition-colors hover:bg-[#f3f2f1]"
             >
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                {!singleSelect && (
-                  <div
-                    className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 ${
-                      isSelected ? "bg-[#5e6ad2] border-[#5e6ad2]" : "border-[#d4d4d4]"
-                    }`}
-                  >
-                    {isSelected && (
-                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="white" strokeWidth="1.5">
-                        <path d="M1.5 4L3 5.5L6.5 2" />
-                      </svg>
-                    )}
-                  </div>
-                )}
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                {/* Checkboxes where several options can be chosen, radios where only one can, left of the label. */}
+                <span className={`opt-mark${singleSelect ? " opt-mark--radio" : ""}${isSelected ? " opt-mark--on" : ""}`} aria-hidden="true" />
                 <span
                   className={`truncate ${isSelected ? "text-[#191919] font-medium" : "text-[#191919]"}`}
                   title={label}
@@ -100,7 +97,7 @@ export function FilterDropdown({ options, selected, onChange, onClose, singleSel
 export const JOB_FILTER_KEYS = ["roleCategories", "seniorityLevels", "workModes", "pay", "locations", "firm", "firmTypes", "technologies", "skillAreas", "assetClasses"];
 export const FIRM_FILTER_KEYS = ["firmTypes", "roleCategories", "seniorityLevels", "locations", "technologies"];
 
-export default function FilterBar({ filters, setFilters, jobs, selectedFirm, onClearFirm, onSelectFirm, allJobs, keys = JOB_FILTER_KEYS, collapsible = false }) {
+export default function FilterBar({ filters, setFilters, jobs, facetJobs, selectedFirm, onClearFirm, onSelectFirm, allJobs, keys = JOB_FILTER_KEYS, collapsible = false }) {
   const [openFilter, setOpenFilter] = useState(null);
   // On a phone the jobs page folds its filters behind one button, so the first screen shows jobs, not ten buttons.
   const [shown, setShown] = useState(false);
@@ -108,49 +105,52 @@ export default function FilterBar({ filters, setFilters, jobs, selectedFirm, onC
   const toggle = (key) => setOpenFilter(openFilter === key ? null : key);
   const updateFilter = (key) => (values) => setFilters((prev) => ({ ...prev, [key]: values }));
 
+  // Each group counts its options without its own selection (see matchesFilters in App.jsx).
+  const pool = (key) => (facetJobs ? facetJobs(key) : jobs);
+
   const firmOptions = useMemo(() => {
-    const source = allJobs || jobs;
+    const source = facetJobs ? facetJobs("firm") : allJobs || jobs;
     const counts = {};
     for (const j of source) counts[j.firmName] = (counts[j.firmName] || 0) + 1;
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .map(([name, count]) => ({ value: name, label: name, count }));
-  }, [allJobs, jobs]);
+  }, [allJobs, jobs, facetJobs]);
 
   const firmTypeOptions = useMemo(() => {
     const counts = {};
-    for (const j of jobs) counts[j.firmType] = (counts[j.firmType] || 0) + 1;
+    for (const j of pool("firmTypes")) counts[j.firmType] = (counts[j.firmType] || 0) + 1;
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .map(([type, count]) => ({ value: type, label: FIRM_TYPE_LABELS[type] || type, count }));
-  }, [jobs]);
+  }, [jobs, facetJobs]);
 
   const roleOptions = useMemo(() => {
     const counts = {};
-    for (const j of jobs) counts[j.roleCategory] = (counts[j.roleCategory] || 0) + 1;
+    for (const j of pool("roleCategories")) counts[j.roleCategory] = (counts[j.roleCategory] || 0) + 1;
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .map(([role, count]) => ({ value: role, label: ROLE_LABELS[role] || role, count }));
-  }, [jobs]);
+  }, [jobs, facetJobs]);
 
   const seniorityOptions = useMemo(() => {
     const counts = {};
-    for (const j of jobs) counts[j.seniorityLevel] = (counts[j.seniorityLevel] || 0) + 1;
+    for (const j of pool("seniorityLevels")) counts[j.seniorityLevel] = (counts[j.seniorityLevel] || 0) + 1;
     return SENIORITY_ORDER.filter((s) => counts[s]).map((s) => ({
       value: s,
       label: SENIORITY_LABELS[s],
       count: counts[s],
     }));
-  }, [jobs]);
+  }, [jobs, facetJobs]);
 
   const locationOptions = useMemo(() => {
     const counts = {};
-    for (const j of jobs) for (const loc of j.locations) counts[loc] = (counts[loc] || 0) + 1;
+    for (const j of pool("locations")) for (const loc of j.locations) counts[loc] = (counts[loc] || 0) + 1;
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 20)
       .map(([loc, count]) => ({ value: loc, label: loc, count }));
-  }, [jobs]);
+  }, [jobs, facetJobs]);
 
   const technologyOptions = useMemo(() => {
     const counts = {};
@@ -168,28 +168,37 @@ export default function FilterBar({ filters, setFilters, jobs, selectedFirm, onC
     return SKILL_AREA_NAMES.map((name) => ({
       value: name,
       label: name,
-      count: jobs.filter((j) => matchesSkillArea(j, name)).length,
+      count: pool("skillAreas").filter((j) => matchesSkillArea(j, name)).length,
     }))
       .filter((o) => o.count > 0)
       .sort((a, b) => b.count - a.count);
-  }, [jobs]);
+  }, [jobs, facetJobs]);
+
+  // Salary is one choice: any posting that shows one, or a floor. Counts follow the other filters, like every option.
+  const payOptions = useMemo(
+    () =>
+      PAY_OPTIONS.map(({ value, label }) => ({ value, label, count: pool("pay").filter((j) => meetsPay(j, value)).length })).filter(
+        (o) => o.count > 0,
+      ),
+    [jobs, facetJobs],
+  );
 
   const workModeOptions = useMemo(() => {
     const counts = {};
-    for (const j of jobs) if (WORK_MODE_LABELS[j.workMode]) counts[j.workMode] = (counts[j.workMode] || 0) + 1;
+    for (const j of pool("workModes")) if (WORK_MODE_LABELS[j.workMode]) counts[j.workMode] = (counts[j.workMode] || 0) + 1;
     return Object.keys(WORK_MODE_LABELS)
       .filter((m) => counts[m])
       .map((m) => ({ value: m, label: WORK_MODE_LABELS[m], count: counts[m] }));
-  }, [jobs]);
+  }, [jobs, facetJobs]);
 
   const assetClassOptions = useMemo(() => {
     const counts = {};
-    for (const j of jobs) for (const ac of j.assetClasses || []) counts[ac] = (counts[ac] || 0) + 1;
+    for (const j of pool("assetClasses")) for (const ac of j.assetClasses || []) counts[ac] = (counts[ac] || 0) + 1;
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 15)
       .map(([ac, count]) => ({ value: ac, label: ac, count }));
-  }, [jobs]);
+  }, [jobs, facetJobs]);
 
   const activeCount = Object.values(filters).reduce((sum, arr) => sum + arr.length, 0) + (selectedFirm ? 1 : 0);
 
@@ -219,7 +228,7 @@ export default function FilterBar({ filters, setFilters, jobs, selectedFirm, onC
     roleCategories: (v) => ROLE_LABELS[v] || v,
     seniorityLevels: (v) => SENIORITY_LABELS[v] || v,
     workModes: (v) => WORK_MODE_LABELS[v] || v,
-    pay: () => "Salary listed",
+    pay: (v) => PAY_OPTIONS.find((o) => o.value === v)?.label ?? v,
   };
   const selectedTags = [
     ...(keys.includes("firm") && selectedFirm ? [{ key: "firm", value: selectedFirm, label: selectedFirm }] : []),
@@ -280,15 +289,22 @@ export default function FilterBar({ filters, setFilters, jobs, selectedFirm, onC
                 onClose={closeAndFocus("firm")}
               />,
             );
-          if (key === "pay") {
-            const on = filters.pay.includes("listed");
-            return (
-              <button key="pay" type="button" className={chipClass(on)} aria-pressed={on} onClick={() => updateFilter("pay")(on ? [] : ["listed"])}>
-                <span className={`filter-chip__box${on ? " filter-chip__box--on" : ""}`} aria-hidden="true" />
-                Salary listed
-              </button>
+          if (key === "pay")
+            return dropdownButton(
+              "pay",
+              filters.pay.length ? "Salary (1)" : "Salary",
+              filters.pay.length > 0,
+              <FilterDropdown
+                options={payOptions}
+                selected={filters.pay}
+                singleSelect
+                onChange={(values) => {
+                  updateFilter("pay")(values);
+                  setOpenFilter(null);
+                }}
+                onClose={closeAndFocus("pay")}
+              />,
             );
-          }
           const config = allConfigs[key];
           if (!config) return null;
           const n = filters[key].length;

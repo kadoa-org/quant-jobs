@@ -10,7 +10,7 @@ const seed = html => {
   return { ...page, data: JSON.parse(read(page.dataUrl.replace(/^\/quant\//, ''))) };
 };
 const home = read('index.html');
-assert.match(home, /<h1[^>]*>Quant jobs<\/h1>/);
+assert.match(home, /<h1[^>]*>The most comprehensive quant job board<\/h1>/);
 assert.match(home, /<label[^>]*for="job-q"/, "the search field has a visible label");
 assert.match(home, /<table/);
 const publishedJobs = new Set(seed(home).data.jobs.map(job => job.slug));
