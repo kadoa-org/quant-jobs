@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { byAddedInterleaved } from '../src/jobOrder.js';
 const root = new URL('../dist/quant/', import.meta.url);
 const read = file => fs.readFileSync(new URL(file, root), 'utf8');
 // The shells carry a small seed that points at the shared data file (dataUrl); the test reads it the way the browser does.
@@ -9,13 +10,16 @@ const seed = html => {
   return { ...page, data: JSON.parse(read(page.dataUrl.replace(/^\/quant\//, ''))) };
 };
 const home = read('index.html');
-assert.match(home, /<h1[^>]*>The most comprehensive quant job board<\/h1>/);
+assert.match(home, /<h1[^>]*>Quant jobs<\/h1>/);
+assert.match(home, /<label[^>]*for="job-q"/, "the search field has a visible label");
 assert.match(home, /<table/);
 const publishedJobs = new Set(seed(home).data.jobs.map(job => job.slug));
-const linkedJobs = [...home.matchAll(/href="\/quant\/job\/([^"/]+)\/"/g)].map(match => match[1]);
-// The table opens newest first. A fresh posting can lack a job page (no description scraped yet), so the first page
+// The page prints each job twice, as a phone card and a table row; the table is the one to check.
+const homeTable = home.slice(home.indexOf('<table'), home.indexOf('</table>'));
+const linkedJobs = [...homeTable.matchAll(/href="\/quant\/job\/([^"/]+)\/"/g)].map(match => match[1]);
+// The table opens newest first by the day each posting was added, firms taking turns within a day. A fresh posting can lack a job page (no description scraped yet), so the first page
 // links every one of its 50 rows that has a page, in the table's order: the check follows the data, not a fixed 50.
-const firstPage = [...seed(home).data.jobs].sort((a, b) => (b.datePosted || "").localeCompare(a.datePosted || "")).slice(0, 50);
+const firstPage = byAddedInterleaved(seed(home).data.jobs).slice(0, 50);
 assert.equal(firstPage.length, 50, "first page has 50 rows");
 assert.deepEqual(linkedJobs, firstPage.filter((job) => job.slug).map((job) => job.slug), "first page links every row that has a job page, newest first");
 assert(linkedJobs.every(slug => publishedJobs.has(slug)), "every visible job belongs to the published dataset");

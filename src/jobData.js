@@ -9,6 +9,8 @@ export function readJobData(db) {
       firmType: r.firm_type,
       jobTitle: r.job_title,
       datePosted: r.date_posted,
+      // The day our daily run first saw the posting (or its posting date, for postings found on a firm's first run).
+      dateAdded: r.date_added ?? null,
       applyUrl: r.apply_url,
       locations: r.locations ? JSON.parse(r.locations) : [],
       jobType: r.job_type,

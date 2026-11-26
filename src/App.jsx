@@ -76,16 +76,17 @@ export function parseUrl(pathname = window.location.pathname, search = window.lo
     if (val) filters[key] = val.split(",");
   }
   const searchText = params.get("q") || "";
+  const where = params.get("where") || "";
   // Which overview a drill-down came from, so the destination can offer a way
   // back. Carried in the URL so Back, Forward, and shared links all agree.
   const from = params.get("from") || null;
-  return { view, firm, filters, search: searchText, from };
+  return { view, firm, filters, search: searchText, where, from };
 }
 
 // Write state to URL params. Filter tweaks replace (no history spam); a
 // deliberate drill-down pushes, so the browser Back button returns to the
 // overview it came from.
-function syncUrl(view, filters, selectedFirm, search, from, push) {
+function syncUrl(view, filters, selectedFirm, search, where, from, push) {
   const params = new URLSearchParams();
   // Path-routed views carry their own view; do not duplicate as ?view=.
   // "table" is the bare-URL default, so it is omitted too — and "firms" must
@@ -96,6 +97,7 @@ function syncUrl(view, filters, selectedFirm, search, from, push) {
     if (values.length > 0) params.set(key, values.join(","));
   }
   if (search) params.set("q", search);
+  if (where) params.set("where", where);
   if (from) params.set("from", from);
   const qs = params.toString();
   const path = pathForView(view);
@@ -153,6 +155,7 @@ export default function App({ initialPage = null }) {
   const [filters, setFilters] = useState(initial.filters);
   const [selectedFirm, setSelectedFirm] = useState(initial.firm);
   const [search, setSearch] = useState(initial.search);
+  const [where, setWhere] = useState(initial.where);
   const [from, setFrom] = useState(initial.from);
   // Set by a drill-down so the next URL sync pushes a history entry instead of
   // replacing one; reset immediately after, so filter edits stay replace-only.
@@ -165,12 +168,12 @@ export default function App({ initialPage = null }) {
     if (!urlReady.current) {
       urlReady.current = true;
       const next = parseUrl();
-      setView(next.view); setFilters(next.filters); setSelectedFirm(next.firm); setSearch(next.search); setFrom(next.from);
+      setView(next.view); setFilters(next.filters); setSelectedFirm(next.firm); setSearch(next.search); setWhere(next.where); setFrom(next.from);
       return;
     }
-    syncUrl(view, filters, selectedFirm, search, from, pushNext.current);
+    syncUrl(view, filters, selectedFirm, search, where, from, pushNext.current);
     pushNext.current = false;
-  }, [view, filters, selectedFirm, search, from]);
+  }, [view, filters, selectedFirm, search, where, from]);
 
   // Back/Forward: the URL is the source of truth, so re-read it. Without this
   // the pushed drill-down entry would change the address bar but not the view.
@@ -181,6 +184,7 @@ export default function App({ initialPage = null }) {
       setFilters(next.filters);
       setSelectedFirm(next.firm);
       setSearch(next.search);
+      setWhere(next.where);
       setFrom(next.from);
     };
     window.addEventListener("popstate", onPop);
@@ -193,6 +197,7 @@ export default function App({ initialPage = null }) {
     setFilters({ ...EMPTY_FILTERS, ...nextFilters });
     setSelectedFirm(firm);
     setSearch("");
+    setWhere("");
     setFrom(source ?? null);
     setView(nextView);
   }, []);
@@ -219,6 +224,7 @@ export default function App({ initialPage = null }) {
       if (filters.roleCategories.length > 0 && !filters.roleCategories.includes(j.roleCategory)) return false;
       if (filters.seniorityLevels.length > 0 && !filters.seniorityLevels.includes(j.seniorityLevel)) return false;
       if (filters.workModes.length > 0 && !filters.workModes.includes(j.workMode)) return false;
+      if (filters.pay.includes("listed") && !j.salary) return false;
       if (filters.locations.length > 0 && !j.locations.some((l) => filters.locations.includes(l))) return false;
       if (filters.assetClasses.length > 0 && !j.assetClasses.some((a) => filters.assetClasses.includes(a)))
         return false;
@@ -234,6 +240,38 @@ export default function App({ initialPage = null }) {
       return true;
     });
   }, [jobs, filters, selectedFirm]);
+
+  // The jobs list also applies the two search fields: "What" across title, firm, languages and skills, "Where" across
+  // locations, with "remote" also matching postings marked remote.
+  const listedJobs = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const w = where.trim().toLowerCase();
+    if (!q && !w) return filteredJobs;
+    return filteredJobs.filter((j) => {
+      if (
+        q &&
+        !(
+          j.jobTitle.toLowerCase().includes(q) ||
+          j.firmName.toLowerCase().includes(q) ||
+          j.programmingLanguages.some((l) => l.toLowerCase().includes(q)) ||
+          j.skills.some((x) => x.toLowerCase().includes(q))
+        )
+      )
+        return false;
+      if (w && !(j.locations.some((l) => l.toLowerCase().includes(w)) || (w.startsWith("remote") && j.workMode === "remote")))
+        return false;
+      return true;
+    });
+  }, [filteredJobs, search, where]);
+
+  const placeOptions = useMemo(() => {
+    const counts = {};
+    for (const j of jobs) for (const l of j.locations) counts[l] = (counts[l] || 0) + 1;
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 60)
+      .map(([l]) => l);
+  }, [jobs]);
 
   const filteredFirms = useMemo(() => {
     const firmMap = new Map();
@@ -252,8 +290,9 @@ export default function App({ initialPage = null }) {
   const totalFirms = filteredFirms.length;
 
   // Each view places the filters under its own title and offers the ones that fit it.
-  const filterBar = (keys) => (
+  const filterBar = (keys, collapsible = false) => (
     <FilterBar
+      collapsible={collapsible}
       keys={keys}
       filters={filters}
       setFilters={setFilters}
@@ -310,17 +349,57 @@ export default function App({ initialPage = null }) {
             {/* A job board opens on the list: title, one line of scope, then search and the table, as openquant,
                 eFinancialCareers and Wellfound do. Market figures live on the Insights pages. */}
             <div className="home-intro">
-              <h1 className="dk-h1">The most comprehensive quant job board</h1>
+              <h1 className="dk-h1">Quant jobs</h1>
               <p className="home-lede">
-                {filteredJobs.length.toLocaleString("en-US")} open roles at {new Set(filteredJobs.map((j) => j.firmName)).size} firms, updated daily.
+                {jobs.length.toLocaleString("en-US")} open roles at {new Set(jobs.map((j) => j.firmName)).size} hedge funds, trading firms and asset managers, updated daily.
               </p>
             </div>
-            {filterBar(JOB_FILTER_KEYS)}
+            <form className="job-search" role="search" onSubmit={(e) => e.preventDefault()}>
+              <div className="job-search__field">
+                <label htmlFor="job-q" className="job-search__label">What</label>
+                <span className="job-search__hint" id="job-q-hint">Job title, firm, language or skill</span>
+                <input
+                  id="job-q"
+                  type="search"
+                  aria-describedby="job-q-hint"
+                  className="job-search__input"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  autoComplete="off"
+                />
+              </div>
+              <div className="job-search__field">
+                <label htmlFor="job-where" className="job-search__label">Where</label>
+                <span className="job-search__hint" id="job-where-hint">City, country or "remote"</span>
+                <input
+                  id="job-where"
+                  type="search"
+                  list="job-places"
+                  aria-describedby="job-where-hint"
+                  className="job-search__input"
+                  value={where}
+                  onChange={(e) => setWhere(e.target.value)}
+                  autoComplete="off"
+                />
+                <datalist id="job-places">
+                  {placeOptions.map((l) => (
+                    <option key={l} value={l} />
+                  ))}
+                </datalist>
+              </div>
+            </form>
+            {filterBar(JOB_FILTER_KEYS, true)}
             <DataTable
-              jobs={filteredJobs}
-              search={search}
-              onSearchChange={setSearch}
-              onClearAll={() => setFilters({ ...EMPTY_FILTERS })}
+              jobs={listedJobs}
+              hasQuery={Boolean(search || where)}
+              onClearQuery={() => {
+                setSearch("");
+                setWhere("");
+              }}
+              onClearAll={() => {
+                setFilters({ ...EMPTY_FILTERS });
+                setSelectedFirm(null);
+              }}
             />
             </div>
           )}

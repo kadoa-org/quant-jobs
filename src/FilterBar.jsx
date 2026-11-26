@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { EMPTY_FILTERS, FIRM_TYPE_LABELS, ROLE_LABELS, SENIORITY_LABELS, SENIORITY_ORDER } from "./constants";
+import { EMPTY_FILTERS, FIRM_TYPE_LABELS, ROLE_LABELS, SENIORITY_LABELS, SENIORITY_ORDER, WORK_MODE_LABELS } from "./constants";
 import { matchesSkillArea, SKILL_AREA_NAMES } from "./skillAreas";
 
 export function FilterDropdown({ options, selected, onChange, onClose, singleSelect }) {
@@ -11,8 +11,15 @@ export function FilterDropdown({ options, selected, onChange, onClose, singleSel
     const handler = (e) => {
       if (ref.current && !ref.current.contains(e.target)) onClose();
     };
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose(true);
+    };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [onClose]);
 
   useEffect(() => {
@@ -31,6 +38,7 @@ export function FilterDropdown({ options, selected, onChange, onClose, singleSel
           <input
             ref={inputRef}
             type="text"
+            aria-label="Filter the options"
             placeholder="Filter..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -44,6 +52,8 @@ export function FilterDropdown({ options, selected, onChange, onClose, singleSel
           return (
             <button
               key={value}
+              type="button"
+              aria-pressed={isSelected}
               onClick={() => {
                 if (singleSelect) {
                   onChange(isSelected ? [] : [value]);
@@ -86,11 +96,14 @@ export function FilterDropdown({ options, selected, onChange, onClose, singleSel
 
 // `keys` picks the filters a page offers, in order. The jobs list offers all of them; the firms table only those that
 // describe a firm's hiring (a firm filter, skill area and asset class describe single postings, not firms).
-export const JOB_FILTER_KEYS = ["firm", "firmTypes", "roleCategories", "seniorityLevels", "locations", "technologies", "skillAreas", "assetClasses"];
+// The jobs list leads with what people filter by most on job boards: role, seniority, work mode and pay.
+export const JOB_FILTER_KEYS = ["roleCategories", "seniorityLevels", "workModes", "pay", "locations", "firm", "firmTypes", "technologies", "skillAreas", "assetClasses"];
 export const FIRM_FILTER_KEYS = ["firmTypes", "roleCategories", "seniorityLevels", "locations", "technologies"];
 
-export default function FilterBar({ filters, setFilters, jobs, selectedFirm, onClearFirm, onSelectFirm, allJobs, keys = JOB_FILTER_KEYS }) {
+export default function FilterBar({ filters, setFilters, jobs, selectedFirm, onClearFirm, onSelectFirm, allJobs, keys = JOB_FILTER_KEYS, collapsible = false }) {
   const [openFilter, setOpenFilter] = useState(null);
+  // On a phone the jobs page folds its filters behind one button, so the first screen shows jobs, not ten buttons.
+  const [shown, setShown] = useState(false);
 
   const toggle = (key) => setOpenFilter(openFilter === key ? null : key);
   const updateFilter = (key) => (values) => setFilters((prev) => ({ ...prev, [key]: values }));
@@ -161,6 +174,14 @@ export default function FilterBar({ filters, setFilters, jobs, selectedFirm, onC
       .sort((a, b) => b.count - a.count);
   }, [jobs]);
 
+  const workModeOptions = useMemo(() => {
+    const counts = {};
+    for (const j of jobs) if (WORK_MODE_LABELS[j.workMode]) counts[j.workMode] = (counts[j.workMode] || 0) + 1;
+    return Object.keys(WORK_MODE_LABELS)
+      .filter((m) => counts[m])
+      .map((m) => ({ value: m, label: WORK_MODE_LABELS[m], count: counts[m] }));
+  }, [jobs]);
+
   const assetClassOptions = useMemo(() => {
     const counts = {};
     for (const j of jobs) for (const ac of j.assetClasses || []) counts[ac] = (counts[ac] || 0) + 1;
@@ -176,12 +197,12 @@ export default function FilterBar({ filters, setFilters, jobs, selectedFirm, onC
     firmTypes: { label: "Firm type", options: firmTypeOptions },
     roleCategories: { label: "Role", options: roleOptions },
     seniorityLevels: { label: "Seniority", options: seniorityOptions },
+    workModes: { label: "Work mode", options: workModeOptions },
     locations: { label: "Location", options: locationOptions },
     technologies: { label: "Technology", options: technologyOptions },
     skillAreas: { label: "Skill area", options: skillAreaOptions },
     assetClasses: { label: "Asset class", options: assetClassOptions },
   };
-  const filterConfigs = keys.filter((k) => allConfigs[k]).map((key) => ({ key, ...allConfigs[key] }));
 
   // Buttons that read as controls, not tags: 16px text, a visible border and a chevron, the selected count in the label.
   const chipClass = (active) =>
@@ -192,96 +213,115 @@ export default function FilterBar({ filters, setFilters, jobs, selectedFirm, onC
     </svg>
   );
 
-  const closeIcon = (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 12 12"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    >
-      <path d="M3 3l6 6M9 3l-6 6" />
-    </svg>
+
+  const labelFor = {
+    firmTypes: (v) => FIRM_TYPE_LABELS[v] || v,
+    roleCategories: (v) => ROLE_LABELS[v] || v,
+    seniorityLevels: (v) => SENIORITY_LABELS[v] || v,
+    workModes: (v) => WORK_MODE_LABELS[v] || v,
+    pay: () => "Salary listed",
+  };
+  const selectedTags = [
+    ...(keys.includes("firm") && selectedFirm ? [{ key: "firm", value: selectedFirm, label: selectedFirm }] : []),
+    ...keys
+      .filter((k) => k !== "firm")
+      .flatMap((k) => (filters[k] || []).map((v) => ({ key: k, value: v, label: (labelFor[k] || ((x) => x))(v) }))),
+  ];
+  const removeTag = ({ key, value }) => {
+    if (key === "firm") onClearFirm?.();
+    else updateFilter(key)(filters[key].filter((v) => v !== value));
+  };
+
+  const dropdownButton = (key, label, active, content) => (
+    <div key={key} className="relative">
+      <button
+        type="button"
+        id={`filter-${key}`}
+        onClick={() => toggle(key)}
+        className={chipClass(active)}
+        aria-expanded={openFilter === key}
+        aria-haspopup="true"
+      >
+        <span>{label}</span>
+        {chevron}
+      </button>
+      {openFilter === key && content}
+    </div>
   );
+  const closeAndFocus = (key) => (refocus) => {
+    setOpenFilter(null);
+    if (refocus === true) document.getElementById(`filter-${key}`)?.focus();
+  };
 
   return (
-    <div className="filter-bar">
-      <span className="filter-bar__label">Filter by</span>
-      {/* Firm single-select */}
-      {keys.includes("firm") && <div className="relative">
-        <button onClick={() => toggle("firm")} className={chipClass(!!selectedFirm)}>
-          <span>{selectedFirm || "Firm"}</span>
-          {!selectedFirm && chevron}
-          {selectedFirm && (
-            <span
-              className="filter-chip__clear" aria-label="Clear"
-              onClick={(e) => {
-                e.stopPropagation();
-                onClearFirm();
-              }}
-            >
-              {closeIcon}
-            </span>
-          )}
+    <div className={`filter-wrap${collapsible ? " filter-wrap--collapsible" : ""}${shown ? " filter-wrap--shown" : ""}`}>
+      {collapsible && (
+        <button type="button" className="filter-toggle" aria-expanded={shown} aria-controls="job-filters" onClick={() => setShown(!shown)}>
+          {shown ? "Hide filters" : "Filters"}
+          {activeCount > 0 ? ` (${activeCount})` : ""}
         </button>
-        {openFilter === "firm" && (
-          <FilterDropdown
-            options={firmOptions}
-            selected={selectedFirm ? [selectedFirm] : []}
-            singleSelect
-            onChange={(values) => {
-              const newFirm = values.length > 0 ? values[0] : null;
-              if (onSelectFirm) onSelectFirm(newFirm);
-              setOpenFilter(null);
+      )}
+      <div className="filter-bar" id="job-filters">
+        <span className="filter-bar__label">Filter by</span>
+        {keys.map((key) => {
+          if (key === "firm")
+            return dropdownButton(
+              "firm",
+              selectedFirm ? "Firm (1)" : "Firm",
+              !!selectedFirm,
+              <FilterDropdown
+                options={firmOptions}
+                selected={selectedFirm ? [selectedFirm] : []}
+                singleSelect
+                onChange={(values) => {
+                  onSelectFirm?.(values.length > 0 ? values[0] : null);
+                  setOpenFilter(null);
+                }}
+                onClose={closeAndFocus("firm")}
+              />,
+            );
+          if (key === "pay") {
+            const on = filters.pay.includes("listed");
+            return (
+              <button key="pay" type="button" className={chipClass(on)} aria-pressed={on} onClick={() => updateFilter("pay")(on ? [] : ["listed"])}>
+                <span className={`filter-chip__box${on ? " filter-chip__box--on" : ""}`} aria-hidden="true" />
+                Salary listed
+              </button>
+            );
+          }
+          const config = allConfigs[key];
+          if (!config) return null;
+          const n = filters[key].length;
+          return dropdownButton(
+            key,
+            `${config.label}${n > 0 ? ` (${n})` : ""}`,
+            n > 0,
+            <FilterDropdown options={config.options} selected={filters[key]} onChange={updateFilter(key)} onClose={closeAndFocus(key)} />,
+          );
+        })}
+      </div>
+
+      {selectedTags.length > 0 && (
+        <div className="filter-tags">
+          <span className="filter-bar__label">Selected</span>
+          {selectedTags.map((t) => (
+            <button key={`${t.key}:${t.value}`} type="button" className="filter-tag" onClick={() => removeTag(t)}>
+              <span className="cmdk-sr">Remove filter: </span>
+              {t.label}
+              <span aria-hidden="true" className="filter-tag__x">×</span>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              setFilters({ ...EMPTY_FILTERS });
+              onClearFirm?.();
             }}
-            onClose={() => setOpenFilter(null)}
-          />
-        )}
-      </div>}
-
-      {/* Multi-select filters */}
-      {filterConfigs.map(({ key, label, options }) => (
-        <div key={key} className="relative">
-          <button onClick={() => toggle(key)} className={chipClass(filters[key].length > 0)}>
-            <span>{label}{filters[key].length > 0 ? ` (${filters[key].length})` : ""}</span>
-            {filters[key].length === 0 && chevron}
-            {filters[key].length > 0 && (
-              <>
-                <span
-                  className="filter-chip__clear" aria-label="Clear"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    updateFilter(key)([]);
-                  }}
-                >
-                  {closeIcon}
-                </span>
-              </>
-            )}
+            className="filter-bar__clear"
+          >
+            Clear filters
           </button>
-          {openFilter === key && (
-            <FilterDropdown
-              options={options}
-              selected={filters[key]}
-              onChange={updateFilter(key)}
-              onClose={() => setOpenFilter(null)}
-            />
-          )}
         </div>
-      ))}
-
-      {activeCount > 0 && (
-        <button
-          onClick={() => {
-            setFilters({ ...EMPTY_FILTERS });
-            if (onClearFirm) onClearFirm();
-          }}
-          className="filter-bar__clear"
-        >
-          Clear filters
-        </button>
       )}
     </div>
   );

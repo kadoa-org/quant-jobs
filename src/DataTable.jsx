@@ -1,75 +1,84 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
+import { ROLE_LABELS, SENIORITY_LABELS, WORK_MODE_LABELS } from "./constants";
+import { byAddedInterleaved } from "./jobOrder";
 
-// Dates as "25 Sep 2026", on one line; the ISO date stays in the data and the CSV export.
+// Dates as "25 Nov 2026", on one line; the ISO date stays in the data and the CSV export. Absolute, not "2 days
+// ago": the page is prerendered once a day and hydrated later, and a relative date would change between the two.
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const govDate = (iso) => {
   if (!iso) return "";
   const [y, m, d] = iso.split("-").map(Number);
   return `${d} ${MONTHS[m - 1]} ${y}`;
 };
-import { ROLE_LABELS, SENIORITY_LABELS } from "./constants";
+const salaryText = (s) => (s ? `$${(s / 1000).toFixed(0)}k` : "");
 
-export default function DataTable({ jobs, search: externalSearch, onSearchChange, onClearAll }) {
-  const [internalSearch, setInternalSearch] = useState("");
-  const search = externalSearch !== undefined ? externalSearch : internalSearch;
-  const setSearch = onSearchChange || setInternalSearch;
-  // Newest first: sorted by firm name, the first screen was a wall of AQR postings from February.
-  const [sortBy, setSortBy] = useState("datePosted");
+const COLUMNS = [
+  { key: "firmName", label: "Firm", cls: "w-32" },
+  { key: "jobTitle", label: "Job", cls: "" },
+  { key: "locations", label: "Location", cls: "w-36" },
+  { key: "seniorityLevel", label: "Seniority", cls: "w-28" },
+  { key: "salary", label: "Salary", cls: "w-24" },
+  { key: "dateAdded", label: "Added", cls: "w-32" },
+];
+
+function JobLink({ j, className }) {
+  // Titles link to our own /job/<slug>/ page (full description and Apply button); the posting itself is the fallback
+  // for the few without a prerendered page.
+  if (j.slug) return <a className={className} href={`${import.meta.env.BASE_URL}job/${j.slug}/`}>{j.jobTitle || "View posting"}</a>;
+  if (j.url || j.applyUrl)
+    return <a className={className} href={j.url || j.applyUrl} target="_blank" rel="noreferrer">{j.jobTitle || "View posting"}</a>;
+  return <span>{j.jobTitle || "Untitled posting"}</span>;
+}
+
+export default function DataTable({ jobs, onClearAll, hasQuery, onClearQuery }) {
+  const [sortBy, setSortBy] = useState("dateAdded");
   const [sortOrder, setSortOrder] = useState("desc");
   const [page, setPage] = useState(1);
+  const topRef = useRef(null);
   const pageSize = 50;
 
-  const filtered = useMemo(() => {
-    if (!search) return jobs;
-    const q = search.toLowerCase();
-    return jobs.filter(
-      (j) =>
-        j.jobTitle.toLowerCase().includes(q) ||
-        j.firmName.toLowerCase().includes(q) ||
-        j.locations.some((l) => l.toLowerCase().includes(q)) ||
-        j.programmingLanguages.some((l) => l.toLowerCase().includes(q)) ||
-        j.skills.some((s) => s.toLowerCase().includes(q)),
-    );
-  }, [jobs, search]);
-
   const sorted = useMemo(() => {
-    return [...filtered].sort((a, b) => {
-      let va, vb;
-      switch (sortBy) {
-        case "salary":
-          va = a.salary || 0;
-          vb = b.salary || 0;
-          break;
-        case "datePosted":
-          va = a.datePosted || "";
-          vb = b.datePosted || "";
-          break;
-        default:
-          va = a[sortBy] || "";
-          vb = b[sortBy] || "";
-      }
+    if (sortBy === "dateAdded" && sortOrder === "desc") return byAddedInterleaved(jobs);
+    const value = (j) => {
+      if (sortBy === "salary") return j.salary || 0;
+      if (sortBy === "locations") return j.locations[0] || "";
+      if (sortBy === "seniorityLevel") return SENIORITY_LABELS[j.seniorityLevel] || "";
+      return j[sortBy] || "";
+    };
+    return [...jobs].sort((a, b) => {
+      const va = value(a), vb = value(b);
       if (va < vb) return sortOrder === "asc" ? -1 : 1;
       if (va > vb) return sortOrder === "asc" ? 1 : -1;
       return 0;
     });
-  }, [filtered, sortBy, sortOrder]);
+  }, [jobs, sortBy, sortOrder]);
 
-  const totalPages = Math.ceil(sorted.length / pageSize);
+  // A new search or filter starts again on page 1.
+  const [seen, setSeen] = useState(jobs);
+  if (seen !== jobs) {
+    setSeen(jobs);
+    setPage(1);
+  }
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const paged = sorted.slice((page - 1) * pageSize, page * pageSize);
 
   const toggleSort = (col) => {
     if (sortBy === col) setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     else {
       setSortBy(col);
-      setSortOrder("asc");
+      setSortOrder(col === "dateAdded" || col === "salary" ? "desc" : "asc");
     }
     setPage(1);
   };
 
-  const sortIcon = (col) => (sortBy !== col ? "" : sortOrder === "asc" ? " ^" : " v");
+  const goPage = (p) => {
+    setPage(p);
+    topRef.current?.scrollIntoView({ block: "start" });
+  };
 
   const exportCsv = () => {
-    const headers = ["Firm", "Title", "Role", "Location", "Seniority", "Salary", "Languages", "Date Posted"];
+    const headers = ["Firm", "Job", "Role", "Location", "Seniority", "Salary", "Languages", "Date posted", "Date added"];
     const rows = sorted.map((j) => [
       j.firmName,
       j.jobTitle,
@@ -79,10 +88,10 @@ export default function DataTable({ jobs, search: externalSearch, onSearchChange
       j.salary || "",
       j.programmingLanguages.join(", "),
       j.datePosted || "",
+      j.dateAdded || "",
     ]);
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");
     a.href = url;
     a.download = "quant-jobs.csv";
@@ -90,149 +99,111 @@ export default function DataTable({ jobs, search: externalSearch, onSearchChange
     URL.revokeObjectURL(url);
   };
 
+  const meta = (j) =>
+    [j.locations.slice(0, 2).join(", "), WORK_MODE_LABELS[j.workMode], SENIORITY_LABELS[j.seniorityLevel], salaryText(j.salary)].filter(Boolean);
+
   return (
-    <div className="flex flex-col">
-      <div className="flex items-center gap-2.5 sm:gap-4 pb-2.5 sm:pb-4 border-b border-gray-100 sticky top-11 sm:static z-20 bg-white">
-        <input
-          type="text"
-          placeholder="Search jobs, firms, skills..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          className="flex-1 min-w-0 h-10 bg-gray-50 border border-gray-200 px-3 text-[16px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-100"
-        />
-        <span className="text-[16px] text-gray-500 whitespace-nowrap hidden sm:inline">{filtered.length} results</span>
-        <button
-          onClick={exportCsv}
-          className="h-10 px-3 text-[16px] text-gray-600 hover:text-gray-800 border border-gray-200 hover:border-gray-300 whitespace-nowrap flex-shrink-0"
-        >
-          <span className="hidden sm:inline">Export </span>CSV
+    <div className="jobs" ref={topRef}>
+      <div className="jobs__bar">
+        <p className="jobs__count" aria-live="polite">
+          <strong>{sorted.length.toLocaleString("en-US")}</strong> {sorted.length === 1 ? "job" : "jobs"}
+        </p>
+        <button type="button" onClick={exportCsv} className="jobs__export">
+          Download CSV
         </button>
       </div>
 
-      <div className="">
-        <table className="w-full text-[16px] leading-snug">
-          <thead className="sticky top-0 bg-[#fcfcfc] z-10">
-            <tr className="text-[#5c5c5f] border-b border-[#b1b4b6]">
-              {[
-                { key: "firmName", label: "Firm", w: "w-28 sm:w-32" },
-                { key: "jobTitle", label: "Title", w: "" },
-                { key: "roleCategory", label: "Role", w: "w-28", hide: "hidden sm:table-cell" },
-                { key: "locations", label: "Location", w: "w-28" },
-                { key: "seniorityLevel", label: "Seniority", w: "w-28", hide: "hidden md:table-cell" },
-                { key: "salary", label: "Salary", w: "w-20", hide: "hidden md:table-cell" },
-                { key: "datePosted", label: "Posted", w: "w-28", hide: "hidden lg:table-cell" },
-              ].map(({ key, label, w, hide }) => (
-                <th
-                  key={key}
-                  onClick={() => toggleSort(key)}
-                  className={`${w} ${hide || ""} px-2 sm:px-2.5 py-2.5 text-left text-[16px] font-bold cursor-pointer hover:text-gray-600 select-none whitespace-nowrap`}
-                >
-                  {label}
-                  {sortIcon(key)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {paged.map((j) => (
-              <tr key={j.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                <td className="px-2 sm:px-2.5 py-2.5 text-gray-900 font-medium">{j.firmName}</td>
-                <td className="px-2 sm:px-2.5 py-2.5">
-                  {/* Titles link to our own /job/<slug>/ page (full description +
-                      Apply button) so the site is the hub; external URL is the
-                      fallback for the few postings without a prerendered page. */}
-                  {j.slug ? (
-                    <a
-                      href={`${import.meta.env.BASE_URL}job/${j.slug}/`}
-                      className="text-violet-600 hover:text-violet-700 hover:underline underline-offset-2"
-                    >
-                      {j.jobTitle || "View posting"}
-                    </a>
-                  ) : j.url || j.applyUrl ? (
-                    <a
-                      href={j.url || j.applyUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-violet-600 hover:text-violet-700 hover:underline underline-offset-2"
-                    >
-                      {j.jobTitle || "View posting"}
-                    </a>
-                  ) : (
-                    <span className="text-gray-500">{j.jobTitle || "-"}</span>
-                  )}
-                  {j.programmingLanguages.length > 0 && (
-                    <span className="hidden lg:flex flex-wrap gap-1 mt-1.5">
-                      {j.programmingLanguages.slice(0, 3).map((l) => (
-                        <span key={l} className="bg-gray-100 text-gray-600 rounded px-1.5 py-0.5 text-[14px] leading-tight">
-                          {l}
-                        </span>
-                      ))}
-                    </span>
-                  )}
-                </td>
-                <td className="hidden sm:table-cell px-2 sm:px-2.5 py-2.5 text-gray-500">
-                  {ROLE_LABELS[j.roleCategory] || j.roleCategory}
-                </td>
-                <td className="px-2 sm:px-2.5 py-2.5 text-gray-500">{j.locations.slice(0, 2).join(", ")}</td>
-                <td className="hidden md:table-cell px-2 sm:px-2.5 py-2.5 text-gray-500">
-                  {SENIORITY_LABELS[j.seniorityLevel] || j.seniorityLevel}
-                </td>
-                <td className="hidden md:table-cell px-2 sm:px-2.5 py-2.5 text-gray-500">
-                  {j.salary ? `$${(j.salary / 1000).toFixed(0)}k` : "-"}
-                </td>
-                <td className="hidden lg:table-cell px-2 sm:px-2.5 py-2.5 text-gray-500 whitespace-nowrap">{govDate(j.datePosted) || "-"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {sorted.length === 0 && (
-          <div className="px-5 py-16 text-center">
-            <p className="text-[19px] font-bold text-gray-900 m-0">No matching roles</p>
-            <p className="text-[16px] text-gray-500 mt-2 mb-5">
-              {/* Name the narrower cause: jobs is already filter-narrowed
-                  upstream, so an empty `jobs` means the filters did it, while
-                  a non-empty `jobs` filtered to nothing here means the search. */}
-              {jobs.length === 0 ? "No postings match the selected filters." : `No postings match “${search}”.`}
-            </p>
-            <button
-              onClick={() => {
-                setSearch("");
-                setPage(1);
-                onClearAll?.();
-              }}
-              className="px-4 h-10 text-[16px] border border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              Clear search{onClearAll ? " and filters" : ""}
-            </button>
-          </div>
-        )}
-      </div>
-
       {sorted.length > 0 && (
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-[16px] text-gray-500">
-          <span>
-            Page {page} of {totalPages}
-          </span>
-          <div className="flex gap-2.5">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-              className="px-4 h-10 border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              Prev
-            </button>
-            <button
-              disabled={page >= totalPages}
-              onClick={() => setPage(page + 1)}
-              className="px-4 h-10 bg-[#191919] text-white border border-[#191919] hover:bg-[#333] disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
+        <>
+          {/* Phone: one card per job, every field visible, no sideways scrolling. */}
+          <ol className="job-cards">
+            {paged.map((j) => (
+              <li key={j.id} className="job-card">
+                <JobLink j={j} className="job-link job-card__title" />
+                <span className="job-card__firm">{j.firmName}</span>
+                <span className="job-card__meta">{meta(j).join(" · ")}</span>
+                {j.dateAdded && <span className="job-card__date">Added {govDate(j.dateAdded)}</span>}
+              </li>
+            ))}
+          </ol>
+
+          <table className="jobs-table">
+            <caption className="cmdk-sr">Open quant roles, {sortBy === "dateAdded" ? "newest first" : "sorted"}</caption>
+            <thead>
+              <tr>
+                {COLUMNS.map(({ key, label, cls }) => (
+                  <th key={key} scope="col" className={cls} aria-sort={sortBy === key ? (sortOrder === "asc" ? "ascending" : "descending") : undefined}>
+                    <button type="button" className="firms-table__sort" onClick={() => toggleSort(key)}>
+                      {label}
+                      <span aria-hidden="true" className="jobs-table__arrow">
+                        {sortBy === key ? (sortOrder === "asc" ? " ▲" : " ▼") : ""}
+                      </span>
+                    </button>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {paged.map((j) => (
+                <tr key={j.id}>
+                  <td>{j.firmName}</td>
+                  <td>
+                    <JobLink j={j} className="job-link" />
+                    <span className="jobs-table__role">{ROLE_LABELS[j.roleCategory] || j.roleCategory}</span>
+                    {j.programmingLanguages.length > 0 && (
+                      <span className="jobs-table__tags">
+                        {j.programmingLanguages.slice(0, 3).map((l) => (
+                          <span key={l} className="jobs-table__tag">{l}</span>
+                        ))}
+                      </span>
+                    )}
+                  </td>
+                  <td className="jobs-table__muted">
+                    {j.locations.slice(0, 2).join(", ")}
+                    {WORK_MODE_LABELS[j.workMode] && <span className="jobs-table__sub">{WORK_MODE_LABELS[j.workMode]}</span>}
+                  </td>
+                  <td className="jobs-table__muted">{SENIORITY_LABELS[j.seniorityLevel] || ""}</td>
+                  <td className="jobs-table__num">{salaryText(j.salary) || <span className="jobs-table__none">Not listed</span>}</td>
+                  <td className="jobs-table__muted jobs-table__nowrap">{govDate(j.dateAdded) || <span className="jobs-table__none">Unknown</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <nav className="jobs__pages" aria-label="Pages">
+            <span>
+              Page {page} of {totalPages}
+            </span>
+            <span className="jobs__pagebtns">
+              {page > 1 && (
+                <button type="button" className="jobs__pagebtn" onClick={() => goPage(page - 1)}>
+                  ← Previous page
+                </button>
+              )}
+              {page < totalPages && (
+                <button type="button" className="jobs__pagebtn" onClick={() => goPage(page + 1)}>
+                  Next page →
+                </button>
+              )}
+            </span>
+          </nav>
+        </>
+      )}
+
+      {sorted.length === 0 && (
+        <div className="jobs__empty">
+          <p className="jobs__empty-title">No matching jobs</p>
+          <p>{hasQuery ? "Try fewer words, another place, or fewer filters." : "No jobs match the selected filters."}</p>
+          <button
+            type="button"
+            className="jobs__pagebtn"
+            onClick={() => {
+              onClearQuery?.();
+              onClearAll?.();
+            }}
+          >
+            Clear search and filters
+          </button>
         </div>
       )}
     </div>

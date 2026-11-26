@@ -42,19 +42,21 @@ export const ROLE_COLORS = {
 export const ROLE_LABELS = {
   quantitative_research: "Quant Research",
   quantitative_trading: "Quant Trading",
-  quantitative_development: "Quant Dev",
+  quantitative_development: "Quant Development",
   data_science: "Data Science",
   machine_learning: "ML / AI",
-  software_engineering: "Software Eng",
+  software_engineering: "Software Engineering",
   hft_systems: "HFT Systems",
   risk_management: "Risk",
-  portfolio_management: "Portfolio Mgmt",
+  portfolio_management: "Portfolio Management",
   operations: "Operations",
   compliance: "Compliance",
   sales_trading: "Sales & Trading",
-  business_development: "Business Dev",
+  business_development: "Business Development",
   other: "Other",
 };
+
+export const WORK_MODE_LABELS = { remote: "Remote", hybrid: "Hybrid", onsite: "On-site" };
 
 export const SENIORITY_ORDER = ["intern", "junior", "mid", "senior", "lead", "vp_director", "executive"];
 
@@ -104,6 +106,8 @@ export const EMPTY_FILTERS = {
   locations: [],
   seniorityLevels: [],
   workModes: [],
+  // ["listed"] keeps postings that show a salary.
+  pay: [],
   assetClasses: [],
   // Skill areas group the skills and tools a posting names into the kind of work
   // it is for (see src/skillAreas.js).
